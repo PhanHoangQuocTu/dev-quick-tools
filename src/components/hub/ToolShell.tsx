@@ -15,9 +15,10 @@ export const ToolShell = ({ tool, children }: ToolShellProps) => {
       <div className="flex flex-col gap-2">
         <Link
           to="/"
-          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary uppercase tracking-widest w-fit"
+          className="group inline-flex items-center gap-2 w-fit border border-primary text-primary px-3 py-1.5 text-xs font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-colors"
         >
-          <ChevronLeft className="h-3 w-3" /> back_to_modules
+          <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
+          back_to_modules
         </Link>
         <p className="text-muted-foreground text-sm terminal-prompt">
           ./run {tool.slug} --interactive
