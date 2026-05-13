@@ -12,6 +12,10 @@ import TimestampTool from "./pages/tools/TimestampTool";
 import RegexTool from "./pages/tools/RegexTool";
 import DiffTool from "./pages/tools/DiffTool";
 import MockTool from "./pages/tools/MockTool";
+import SqlTool from "./pages/tools/SqlTool";
+import ColorTool from "./pages/tools/ColorTool";
+import JwtTool from "./pages/tools/JwtTool";
+import CsvTool from "./pages/tools/CsvTool";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +34,10 @@ const App = () => (
             <Route path="/regex" element={<RegexTool />} />
             <Route path="/diff" element={<DiffTool />} />
             <Route path="/mock" element={<MockTool />} />
+            <Route path="/sql" element={<SqlTool />} />
+            <Route path="/color" element={<ColorTool />} />
+            <Route path="/jwt" element={<JwtTool />} />
+            <Route path="/csv" element={<CsvTool />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Route>
