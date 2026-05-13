@@ -26,8 +26,8 @@ export const TerminalHeader = () => {
   );
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
-      <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-4 px-4 md:px-6 py-3">
+    <header className="w-full">
+      <div className="flex items-center justify-between gap-4 px-4 md:px-6 py-3">
         <Link to="/" className="flex items-center gap-3 shrink-0">
           <span className="bg-primary text-primary-foreground px-2 py-0.5 text-xs md:text-sm font-bold tracking-widest">
             SYS.UTL
