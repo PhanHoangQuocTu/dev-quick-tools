@@ -4,85 +4,85 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Phosphor Terminal Design System
-   All colors in HSL. Tokens drive every surface, border and text. */
+/* Phosphor Terminal — Comfortable Edition
+   Softer phosphor accents, off-white body text for long-session readability.
+   All colors HSL. */
 
 @layer base {
   :root {
-    /* Surfaces */
-    --background: 0 0% 2%;            /* void */
-    --foreground: 111 100% 54%;       /* phosphor */
+    /* Surfaces — slightly lifted from pure black to reduce halation */
+    --background: 220 14% 7%;          /* near-black, slight cool tint */
+    --foreground: 210 20% 92%;         /* comfortable off-white body text */
 
-    --card: 0 0% 4%;
-    --card-foreground: 111 100% 54%;
+    --card: 220 14% 9%;
+    --card-foreground: 210 20% 92%;
 
-    --popover: 0 0% 3%;
-    --popover-foreground: 111 100% 54%;
+    --popover: 220 14% 8%;
+    --popover-foreground: 210 20% 92%;
 
-    /* Brand */
-    --primary: 111 100% 54%;          /* phosphor */
-    --primary-foreground: 0 0% 2%;    /* on phosphor */
+    /* Brand — muted phosphor, used as accent only (not body text) */
+    --primary: 142 70% 55%;            /* softer phosphor */
+    --primary-foreground: 220 14% 7%;
 
-    --secondary: 124 56% 33%;         /* phosphor-muted */
-    --secondary-foreground: 0 0% 2%;
+    --secondary: 220 12% 18%;
+    --secondary-foreground: 210 20% 92%;
 
-    --muted: 124 51% 16%;             /* phosphor-dim */
-    --muted-foreground: 124 56% 33%;  /* phosphor-muted */
+    --muted: 220 12% 14%;
+    --muted-foreground: 215 14% 60%;   /* readable secondary text */
 
-    --accent: 111 100% 54%;
-    --accent-foreground: 0 0% 2%;
+    --accent: 142 70% 55%;
+    --accent-foreground: 220 14% 7%;
 
-    --destructive: 348 100% 60%;      /* alert */
+    --destructive: 0 75% 62%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 124 56% 22%;
-    --input: 124 51% 12%;
-    --ring: 111 100% 54%;
+    --border: 220 12% 18%;
+    --input: 220 12% 12%;
+    --ring: 142 70% 55%;
 
-    --radius: 0px;
+    --radius: 4px;
 
-    /* Phosphor scale */
-    --phosphor: 111 100% 54%;
-    --phosphor-muted: 124 56% 33%;
-    --phosphor-dim: 124 51% 16%;
-    --void: 0 0% 2%;
-    --alert: 348 100% 60%;
+    /* Phosphor scale — kept for component refs */
+    --phosphor: 142 70% 55%;
+    --phosphor-muted: 142 30% 45%;
+    --phosphor-dim: 142 20% 25%;
+    --void: 220 14% 7%;
+    --alert: 0 75% 62%;
 
-    /* Effects */
-    --glow-phosphor: 0 0 12px hsl(var(--phosphor) / 0.5);
-    --shadow-crt: inset 0 0 80px hsl(var(--phosphor) / 0.05);
+    /* Effects — much subtler */
+    --glow-phosphor: 0 0 8px hsl(var(--phosphor) / 0.25);
 
-    --sidebar-background: 0 0% 3%;
-    --sidebar-foreground: 124 56% 33%;
-    --sidebar-primary: 111 100% 54%;
-    --sidebar-primary-foreground: 0 0% 2%;
-    --sidebar-accent: 124 51% 12%;
-    --sidebar-accent-foreground: 111 100% 54%;
-    --sidebar-border: 124 56% 22%;
-    --sidebar-ring: 111 100% 54%;
+    /* Sidebar */
+    --sidebar-background: 220 14% 8%;
+    --sidebar-foreground: 215 14% 70%;
+    --sidebar-primary: 142 70% 55%;
+    --sidebar-primary-foreground: 220 14% 7%;
+    --sidebar-accent: 220 12% 14%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 220 12% 16%;
+    --sidebar-ring: 142 70% 55%;
   }
 
   .dark {
-    /* Same — terminal is always dark */
-    --background: 0 0% 2%;
-    --foreground: 111 100% 54%;
-    --card: 0 0% 4%;
-    --card-foreground: 111 100% 54%;
-    --popover: 0 0% 3%;
-    --popover-foreground: 111 100% 54%;
-    --primary: 111 100% 54%;
-    --primary-foreground: 0 0% 2%;
-    --secondary: 124 56% 33%;
-    --secondary-foreground: 0 0% 2%;
-    --muted: 124 51% 16%;
-    --muted-foreground: 124 56% 33%;
-    --accent: 111 100% 54%;
-    --accent-foreground: 0 0% 2%;
-    --destructive: 348 100% 60%;
+    --background: 220 14% 7%;
+    --foreground: 210 20% 92%;
+    --card: 220 14% 9%;
+    --card-foreground: 210 20% 92%;
+    --popover: 220 14% 8%;
+    --popover-foreground: 210 20% 92%;
+    --primary: 142 70% 55%;
+    --primary-foreground: 220 14% 7%;
+    --secondary: 220 12% 18%;
+    --secondary-foreground: 210 20% 92%;
+    --muted: 220 12% 14%;
+    --muted-foreground: 215 14% 60%;
+    --accent: 142 70% 55%;
+    --accent-foreground: 220 14% 7%;
+    --destructive: 0 75% 62%;
     --destructive-foreground: 0 0% 100%;
-    --border: 124 56% 22%;
-    --input: 124 51% 12%;
-    --ring: 111 100% 54%;
+    --border: 220 12% 18%;
+    --input: 220 12% 12%;
+    --ring: 142 70% 55%;
   }
 }
 
@@ -95,45 +95,33 @@
     @apply bg-background text-foreground;
     font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
     font-feature-settings: "ss01", "ss02";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   ::selection {
-    background: hsl(var(--phosphor));
-    color: hsl(var(--void));
-  }
-
-  /* CRT scanlines (very subtle) */
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 50;
-    background: repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent 2px,
-      hsl(var(--phosphor) / 0.025) 3px
-    );
+    background: hsl(var(--phosphor) / 0.35);
+    color: hsl(var(--foreground));
   }
 }
 
 @layer components {
   .glow-text {
-    text-shadow: 0 0 8px hsl(var(--phosphor) / 0.45);
+    /* Subtle, non-fatiguing accent glow — only for headings */
+    text-shadow: 0 0 1px hsl(var(--phosphor) / 0.3);
   }
   .glow-border {
-    box-shadow: 0 0 0 1px hsl(var(--phosphor) / 0.4), 0 0 20px hsl(var(--phosphor) / 0.15);
+    box-shadow: 0 0 0 1px hsl(var(--phosphor) / 0.3);
   }
   .terminal-prompt::before {
     content: "$ ";
-    color: hsl(var(--phosphor-muted));
+    color: hsl(var(--phosphor) / 0.7);
   }
 }
 
 @layer utilities {
   .scrollbar-terminal::-webkit-scrollbar { width: 8px; height: 8px; }
-  .scrollbar-terminal::-webkit-scrollbar-track { background: hsl(var(--void)); }
-  .scrollbar-terminal::-webkit-scrollbar-thumb { background: hsl(var(--phosphor-muted)); }
-  .scrollbar-terminal::-webkit-scrollbar-thumb:hover { background: hsl(var(--phosphor)); }
+  .scrollbar-terminal::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-terminal::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 4px; }
+  .scrollbar-terminal::-webkit-scrollbar-thumb:hover { background: hsl(var(--phosphor-muted)); }
 }
