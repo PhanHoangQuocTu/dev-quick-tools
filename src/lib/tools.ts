@@ -1,4 +1,4 @@
-import { Braces, Binary, Clock, Regex, GitCompare, Database, type LucideIcon } from "lucide-react";
+import { Braces, Binary, Clock, Regex, GitCompare, Database, Code2, Palette, Fingerprint, Table, type LucideIcon } from "lucide-react";
 
 export interface Tool {
   slug: string;
@@ -77,6 +77,50 @@ export const tools: Tool[] = [
       "Synthesize structured dummy data — users, addresses, UUIDs — and export as JSON or CSV.",
     icon: Database,
     meta: "seed: random",
+  },
+  {
+    slug: "sql",
+    name: "SQL_Fmt",
+    code: "MOD_07",
+    symbol: "SQL",
+    short: "Format & pretty-print SQL.",
+    description:
+      "Auto-format SQL queries with configurable keyword casing and indentation. Supports PostgreSQL, MySQL, and standard SQL.",
+    icon: Code2,
+    meta: "dialect: auto",
+  },
+  {
+    slug: "color",
+    name: "Color_Conv",
+    code: "MOD_08",
+    symbol: "#",
+    short: "Hex ↔ RGB ↔ HSL.",
+    description:
+      "Convert between HEX, RGB, and HSL color formats. Live preview swatch with copy-ready output.",
+    icon: Palette,
+    meta: "space: sRGB",
+  },
+  {
+    slug: "jwt",
+    name: "JWT_Decode",
+    code: "MOD_09",
+    symbol: "JWT",
+    short: "Inspect JWT payload.",
+    description:
+      "Decode JWT headers and payloads without verification. Inspect claims, expiry, and metadata.",
+    icon: Fingerprint,
+    meta: "alg: auto",
+  },
+  {
+    slug: "csv",
+    name: "CSV_Conv",
+    code: "MOD_10",
+    symbol: ";",
+    short: "CSV ↔ JSON converter.",
+    description:
+      "Convert between CSV and JSON formats with header detection. Supports quoted fields and array-of-objects output.",
+    icon: Table,
+    meta: "rfc: 4180",
   },
 ];
 
