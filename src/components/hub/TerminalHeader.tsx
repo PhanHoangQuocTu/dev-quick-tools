@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { Search } from "lucide-react";
 import { tools } from "@/lib/tools";
 
 export const TerminalHeader = () => {
@@ -28,19 +29,14 @@ export const TerminalHeader = () => {
   return (
     <header className="w-full">
       <div className="flex items-center justify-between gap-4 px-4 md:px-6 py-3">
-        <Link to="/" className="flex items-center gap-3 shrink-0">
-          <span className="bg-primary text-primary-foreground px-2 py-0.5 text-xs md:text-sm font-bold tracking-widest">
-            SYS.UTL
-          </span>
-          <span className="hidden md:inline text-[11px] uppercase tracking-widest text-muted-foreground">
-            kernel_v1.0.0 // online
+        <Link to="/" className="flex items-center gap-2 shrink-0">
+          <span className="bg-primary text-primary-foreground px-2 py-0.5 text-xs md:text-sm font-bold tracking-wide">
+            DevHub
           </span>
         </Link>
 
         <div className="flex-1 max-w-md relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold pointer-events-none">
-            &gt;
-          </span>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <input
             value={query}
             onChange={(e) => {
@@ -49,9 +45,9 @@ export const TerminalHeader = () => {
             }}
             onFocus={() => setOpen(true)}
             onBlur={() => setTimeout(() => setOpen(false), 150)}
-            placeholder="execute query..."
+            placeholder="Search tools..."
             aria-label="Search tools"
-            className="w-full bg-input/40 border border-border py-1.5 pl-8 pr-14 text-sm focus:outline-none focus:border-primary placeholder:text-muted-foreground transition-colors"
+            className="w-full bg-input/40 border border-border py-1.5 pl-9 pr-14 text-sm focus:outline-none focus:border-primary placeholder:text-muted-foreground transition-colors"
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2 hidden sm:flex gap-1">
             <kbd className="text-[10px] text-muted-foreground border border-border px-1">⌘</kbd>
@@ -61,7 +57,7 @@ export const TerminalHeader = () => {
           {open && query && (
             <div className="absolute left-0 right-0 top-full mt-1 border border-border bg-popover max-h-72 overflow-auto scrollbar-terminal z-50">
               {matches.length === 0 ? (
-                <div className="px-3 py-2 text-xs text-muted-foreground">no_match</div>
+                <div className="px-3 py-2 text-xs text-muted-foreground">No matches</div>
               ) : (
                 matches.map((t) => (
                   <button
@@ -82,9 +78,7 @@ export const TerminalHeader = () => {
           )}
         </div>
 
-        <div className="hidden md:block text-[11px] uppercase tracking-widest text-muted-foreground tabular-nums">
-          status: <span className="text-primary">ok</span>
-        </div>
+        <div className="hidden md:block w-12" />
       </div>
     </header>
   );

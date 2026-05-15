@@ -27,8 +27,8 @@ export const AppSidebar = () => {
         <NavLink to="/" className="flex items-center gap-2 px-2 py-2">
           <Terminal className="h-4 w-4 text-primary shrink-0" />
           {!collapsed && (
-            <span className="text-xs font-bold uppercase tracking-widest text-foreground">
-              SYS.UTL
+            <span className="text-sm font-bold tracking-tight text-foreground">
+              DevHub
             </span>
           )}
         </NavLink>
@@ -58,7 +58,7 @@ export const AppSidebar = () => {
         <SidebarGroup>
           {!collapsed && (
             <SidebarGroupLabel className="text-[10px] uppercase tracking-widest">
-              Modules
+              Tools
             </SidebarGroupLabel>
           )}
           <SidebarGroupContent>
