@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ToolShell } from "@/components/hub/ToolShell";
 import { TerminalButton } from "@/components/hub/TerminalButton";
 import { TerminalTextarea } from "@/components/hub/TerminalTextarea";
+import { OutputPane } from "@/components/hub/OutputPane";
 import { getTool } from "@/lib/tools";
 import { toast } from "sonner";
 
@@ -51,28 +52,16 @@ const JsonTool = () => {
         <TerminalButton onClick={copy} disabled={!result.ok || !result.output}>copy</TerminalButton>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-[calc(100vh-22rem)] min-h-[420px]">
         <TerminalTextarea
           label="input"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          rows={18}
           placeholder='{"hello": "world"}'
         />
-        <div className="flex flex-col gap-1.5">
-          <span className="text-[11px] uppercase tracking-widest text-muted-foreground">
-            output {result.ok ? <span className="text-primary">[ ok ]</span> : <span className="text-destructive">[ err ]</span>}
-          </span>
-          {result.ok ? (
-            <pre className="w-full bg-input/30 border border-border p-3 text-sm font-mono overflow-auto scrollbar-terminal min-h-[420px] whitespace-pre-wrap break-all">
-              {result.output}
-            </pre>
-          ) : (
-            <pre className="w-full bg-input/30 border border-destructive/60 text-destructive p-3 text-sm font-mono overflow-auto scrollbar-terminal min-h-[420px] whitespace-pre-wrap">
-              {result.error}
-            </pre>
-          )}
-        </div>
+        <OutputPane ok={result.ok} error={result.error}>
+          {result.output}
+        </OutputPane>
       </div>
     </ToolShell>
   );
