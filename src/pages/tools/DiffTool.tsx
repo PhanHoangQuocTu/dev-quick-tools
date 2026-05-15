@@ -40,14 +40,14 @@ const DiffTool = () => {
         </span>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <TerminalTextarea label="original" value={left} onChange={(e) => setLeft(e.target.value)} rows={12} />
-        <TerminalTextarea label="modified" value={right} onChange={(e) => setRight(e.target.value)} rows={12} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-[300px]">
+        <TerminalTextarea label="original" value={left} onChange={(e) => setLeft(e.target.value)} />
+        <TerminalTextarea label="modified" value={right} onChange={(e) => setRight(e.target.value)} />
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 flex flex-col min-h-0">
         <span className="text-[11px] uppercase tracking-widest text-muted-foreground">unified_diff</span>
-        <pre className="mt-1.5 border border-border bg-input/30 p-3 text-sm font-mono whitespace-pre-wrap break-words min-h-[180px] overflow-auto scrollbar-terminal">
+        <pre className="mt-1.5 border border-border bg-input/30 p-3 text-sm font-mono whitespace-pre-wrap break-words h-[260px] overflow-auto scrollbar-terminal">
           {parts.map((p, i) => (
             <span
               key={i}
