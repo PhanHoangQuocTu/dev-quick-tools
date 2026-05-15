@@ -78,16 +78,16 @@ const JwtTool = () => {
       />
 
       {result.ok && result.header && result.payload ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="flex flex-col gap-1.5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-[360px]">
+          <div className="flex flex-col gap-1.5 min-h-0">
             <span className="text-[11px] uppercase tracking-widest text-muted-foreground">header</span>
-            <pre className="w-full bg-input/30 border border-border p-3 text-sm font-mono overflow-auto scrollbar-terminal min-h-[200px] whitespace-pre-wrap">
+            <pre className="w-full flex-1 min-h-0 bg-input/30 border border-border p-3 text-sm font-mono overflow-auto scrollbar-terminal whitespace-pre-wrap">
               {JSON.stringify(result.header, null, 2)}
             </pre>
           </div>
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 min-h-0">
             <span className="text-[11px] uppercase tracking-widest text-muted-foreground">payload</span>
-            <pre className="w-full bg-input/30 border border-border p-3 text-sm font-mono overflow-auto scrollbar-terminal min-h-[200px] whitespace-pre-wrap">
+            <pre className="w-full flex-1 min-h-0 bg-input/30 border border-border p-3 text-sm font-mono overflow-auto scrollbar-terminal whitespace-pre-wrap">
               {JSON.stringify(result.payload, null, 2)}
             </pre>
           </div>
