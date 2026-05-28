@@ -16,6 +16,11 @@ import SqlTool from "./pages/tools/SqlTool";
 import ColorTool from "./pages/tools/ColorTool";
 import JwtTool from "./pages/tools/JwtTool";
 import CsvTool from "./pages/tools/CsvTool";
+import UuidTool from "./pages/tools/UuidTool";
+import HashTool from "./pages/tools/HashTool";
+import CaseTool from "./pages/tools/CaseTool";
+import UrlTool from "./pages/tools/UrlTool";
+import LoremTool from "./pages/tools/LoremTool";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +43,11 @@ const App = () => (
             <Route path="/color" element={<ColorTool />} />
             <Route path="/jwt" element={<JwtTool />} />
             <Route path="/csv" element={<CsvTool />} />
+            <Route path="/uuid" element={<UuidTool />} />
+            <Route path="/hash" element={<HashTool />} />
+            <Route path="/case" element={<CaseTool />} />
+            <Route path="/url" element={<UrlTool />} />
+            <Route path="/lorem" element={<LoremTool />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Route>
