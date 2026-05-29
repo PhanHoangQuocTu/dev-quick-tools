@@ -49,6 +49,7 @@ const App = () => (
             <Route path="/case" element={<CaseTool />} />
             <Route path="/url" element={<UrlTool />} />
             <Route path="/lorem" element={<LoremTool />} />
+            <Route path="/qr" element={<QrTool />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Route>
