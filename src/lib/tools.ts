@@ -43,6 +43,7 @@ export const tools: Tool[] = [
   { slug: "case", name: "Case Converter", symbol: "Aa", short: "camel, snake, kebab…", description: "Convert text between camelCase, snake_case, kebab-case, PascalCase, CONSTANT_CASE and more.", icon: Type },
   { slug: "url", name: "URL Parser", symbol: "://", short: "Inspect URL parts.", description: "Break a URL into protocol, host, path, query params and hash. Edit params live.", icon: LinkIcon },
   { slug: "lorem", name: "Lorem Ipsum", symbol: "¶", short: "Placeholder text.", description: "Generate Lorem Ipsum words, sentences or paragraphs for mockups.", icon: FileText },
+  { slug: "qr", name: "QR Generator", symbol: "QR", short: "Create QR codes.", description: "Generate QR codes from any URL or text. Adjust size and copy or download the image.", icon: QrCode },
 ];
 
 export const getTool = (slug: string) => tools.find((t) => t.slug === slug);
