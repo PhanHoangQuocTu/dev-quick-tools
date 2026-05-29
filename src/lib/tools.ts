@@ -14,6 +14,7 @@ import {
   Type,
   Link as LinkIcon,
   FileText,
+  QrCode,
   type LucideIcon,
 } from "lucide-react";
 
