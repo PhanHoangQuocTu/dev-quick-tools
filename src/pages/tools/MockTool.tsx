@@ -162,7 +162,7 @@ const generate = (col: Column, i: number): unknown => {
     case "firstName": return faker.person.firstName();
     case "lastName": return faker.person.lastName();
     case "email": return faker.internet.email();
-    case "username": return faker.internet.username();
+    case "username": return faker.internet.userName();
     case "password": return faker.internet.password();
     case "phone": return faker.phone.number();
     case "address": return faker.location.streetAddress({ useFullAddress: true });
