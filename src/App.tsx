@@ -21,6 +21,7 @@ import HashTool from "./pages/tools/HashTool";
 import CaseTool from "./pages/tools/CaseTool";
 import UrlTool from "./pages/tools/UrlTool";
 import LoremTool from "./pages/tools/LoremTool";
+import QrTool from "./pages/tools/QrTool";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/case" element={<CaseTool />} />
             <Route path="/url" element={<UrlTool />} />
             <Route path="/lorem" element={<LoremTool />} />
+            <Route path="/qr" element={<QrTool />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Route>
