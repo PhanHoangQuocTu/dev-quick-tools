@@ -21,6 +21,7 @@ import HashTool from "./pages/tools/HashTool";
 import CaseTool from "./pages/tools/CaseTool";
 import UrlTool from "./pages/tools/UrlTool";
 import LoremTool from "./pages/tools/LoremTool";
+import QrTool from "./pages/tools/QrTool";
 
 const queryClient = new QueryClient();
 
