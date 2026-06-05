@@ -22,6 +22,19 @@ import CaseTool from "./pages/tools/CaseTool";
 import UrlTool from "./pages/tools/UrlTool";
 import LoremTool from "./pages/tools/LoremTool";
 import QrTool from "./pages/tools/QrTool";
+import CronTool from "./pages/tools/CronTool";
+import HttpStatusTool from "./pages/tools/HttpStatusTool";
+import MarkdownTool from "./pages/tools/MarkdownTool";
+import YamlTool from "./pages/tools/YamlTool";
+import ImageBase64Tool from "./pages/tools/ImageBase64Tool";
+import CheatsheetTool from "./pages/tools/CheatsheetTool";
+import GitignoreTool from "./pages/tools/GitignoreTool";
+import HeadersTool from "./pages/tools/HeadersTool";
+import NumberBaseTool from "./pages/tools/NumberBaseTool";
+import PasswordTool from "./pages/tools/PasswordTool";
+import JsonSchemaTool from "./pages/tools/JsonSchemaTool";
+import SvgTool from "./pages/tools/SvgTool";
+import ImageCompressTool from "./pages/tools/ImageCompressTool";
 
 const queryClient = new QueryClient();
 
@@ -50,7 +63,19 @@ const App = () => (
             <Route path="/url" element={<UrlTool />} />
             <Route path="/lorem" element={<LoremTool />} />
             <Route path="/qr" element={<QrTool />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/cron" element={<CronTool />} />
+            <Route path="/http-status" element={<HttpStatusTool />} />
+            <Route path="/markdown" element={<MarkdownTool />} />
+            <Route path="/yaml" element={<YamlTool />} />
+            <Route path="/img2base64" element={<ImageBase64Tool />} />
+            <Route path="/cheatsheet" element={<CheatsheetTool />} />
+            <Route path="/gitignore" element={<GitignoreTool />} />
+            <Route path="/headers" element={<HeadersTool />} />
+            <Route path="/numberbase" element={<NumberBaseTool />} />
+            <Route path="/password" element={<PasswordTool />} />
+            <Route path="/jsonschema" element={<JsonSchemaTool />} />
+            <Route path="/svgo" element={<SvgTool />} />
+            <Route path="/imgcompress" element={<ImageCompressTool />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>

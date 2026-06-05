@@ -17,9 +17,20 @@ const SqlTool = () => {
   const [dialect, setDialect] = useState<Dialect>("postgresql");
   const [keywordCase, setKeywordCase] = useState<"upper" | "lower" | "preserve">("upper");
 
+  const [mode, setMode] = useState<"pretty" | "minify">("pretty");
+
   const result = useMemo(() => {
     if (!input.trim()) return { ok: true, output: "", error: null as string | null };
     try {
+      if (mode === "minify") {
+        const out = input
+          .replace(/--[^\n]*/g, "")
+          .replace(/\/\*[\s\S]*?\*\//g, "")
+          .replace(/\s+/g, " ")
+          .replace(/\s*([(),;])\s*/g, "$1")
+          .trim();
+        return { ok: true, output: out, error: null };
+      }
       const output = format(input, {
         language: dialect,
         keywordCase: keywordCase as any,
@@ -29,7 +40,7 @@ const SqlTool = () => {
     } catch (e) {
       return { ok: false, output: "", error: (e as Error).message };
     }
-  }, [input, dialect, keywordCase]);
+  }, [input, dialect, keywordCase, mode]);
 
   const copy = async () => {
     if (!result.output) return;
@@ -61,6 +72,9 @@ const SqlTool = () => {
             {c}
           </TerminalButton>
         ))}
+        <div className="w-px h-5 bg-border mx-1 hidden sm:block" />
+        <TerminalButton variant={mode === "pretty" ? "primary" : "ghost"} onClick={() => setMode("pretty")}>pretty</TerminalButton>
+        <TerminalButton variant={mode === "minify" ? "primary" : "ghost"} onClick={() => setMode("minify")}>minify</TerminalButton>
         <div className="flex-1" />
         <TerminalButton variant="ghost" onClick={() => setInput(SAMPLE)}>sample</TerminalButton>
         <TerminalButton variant="ghost" onClick={() => setInput("")}>clear</TerminalButton>
