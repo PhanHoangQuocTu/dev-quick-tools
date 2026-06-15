@@ -452,7 +452,7 @@ const Palette = () => {
       </div>
 
       <div>
-        <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">shades (50 → 950)</div>
+        <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">shades (lightness 95% → 10%)</div>
         <div className="grid grid-cols-5 md:grid-cols-10 gap-1">
           {shades.map((s) => (
             <button
