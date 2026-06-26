@@ -483,6 +483,26 @@ const Palette = () => {
         <PaletteBlock title="Triadic" colors={[base, ...triad]} onCopy={copy} />
         <PaletteBlock title="Analogous" colors={[analogous[0], base, analogous[1]]} onCopy={copy} />
       </div>
+
+      <div className="border border-border p-3 flex flex-wrap items-center gap-2">
+        <span className="text-[11px] uppercase tracking-widest text-muted-foreground mr-1">export:</span>
+        <TerminalButton onClick={() => {
+          const css = `:root {\n${shades.map((s) => `  --shade-${s.l}: ${s.hex};`).join("\n")}\n  --base: ${base};\n  --complement: ${rgbToHex(complement.r, complement.g, complement.b)};\n${triad.map((c, i) => `  --triad-${i + 1}: ${c};`).join("\n")}\n${analogous.map((c, i) => `  --analogous-${i + 1}: ${c};`).join("\n")}\n}`;
+          copy(css, "Palette CSS copied");
+        }}>Copy CSS</TerminalButton>
+        <TerminalButton onClick={() => {
+          const css = `:root {\n${shades.map((s) => `  --shade-${s.l}: ${s.hex};`).join("\n")}\n  --base: ${base};\n  --complement: ${rgbToHex(complement.r, complement.g, complement.b)};\n${triad.map((c, i) => `  --triad-${i + 1}: ${c};`).join("\n")}\n${analogous.map((c, i) => `  --analogous-${i + 1}: ${c};`).join("\n")}\n}`;
+          downloadText("palette.css", css);
+        }}>Download CSS</TerminalButton>
+        <TerminalButton onClick={() => {
+          const tw = `colors: {\n  primary: {\n${shades.map((s) => `    ${s.l}: '${s.hex.toLowerCase()}',`).join("\n")}\n  },\n  base: '${base.toLowerCase()}',\n  complement: '${rgbToHex(complement.r, complement.g, complement.b).toLowerCase()}',\n  triad: [${triad.map((c) => `'${c.toLowerCase()}'`).join(", ")}],\n  analogous: [${analogous.map((c) => `'${c.toLowerCase()}'`).join(", ")}],\n}`;
+          copy(tw, "Tailwind config copied");
+        }}>Copy Tailwind</TerminalButton>
+        <TerminalButton onClick={() => {
+          const tw = `colors: {\n  primary: {\n${shades.map((s) => `    ${s.l}: '${s.hex.toLowerCase()}',`).join("\n")}\n  },\n  base: '${base.toLowerCase()}',\n  complement: '${rgbToHex(complement.r, complement.g, complement.b).toLowerCase()}',\n  triad: [${triad.map((c) => `'${c.toLowerCase()}'`).join(", ")}],\n  analogous: [${analogous.map((c) => `'${c.toLowerCase()}'`).join(", ")}],\n}`;
+          downloadText("palette-tailwind.txt", tw);
+        }}>Download Tailwind</TerminalButton>
+      </div>
     </div>
   );
 };
