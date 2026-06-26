@@ -3,7 +3,7 @@ import { ToolShell } from "@/components/hub/ToolShell";
 import { TerminalButton } from "@/components/hub/TerminalButton";
 import { getTool } from "@/lib/tools";
 import { toast } from "sonner";
-import { Plus, Trash2, Copy, Shuffle } from "lucide-react";
+import { Plus, Trash2, Copy, Shuffle, Download } from "lucide-react";
 
 /* ---------- color math ---------- */
 
