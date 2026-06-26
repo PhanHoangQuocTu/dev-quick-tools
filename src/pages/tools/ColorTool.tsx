@@ -71,13 +71,23 @@ const contrastRatio = (a: string, b: string) => {
 const randomHex = () =>
   "#" + Array.from({ length: 6 }, () => "0123456789ABCDEF"[Math.floor(Math.random() * 16)]).join("");
 
-/* ---------- copy helper ---------- */
+/* ---------- copy / download helpers ---------- */
 
 const useCopy = () =>
   useCallback(async (text: string, label = "copied") => {
     await navigator.clipboard.writeText(text);
     toast.success(label);
   }, []);
+
+const downloadText = (filename: string, text: string) => {
+  const blob = new Blob([text], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+};
 
 /* ---------- Converter tab ---------- */
 
