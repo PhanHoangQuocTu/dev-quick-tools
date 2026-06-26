@@ -3,7 +3,7 @@ import { ToolShell } from "@/components/hub/ToolShell";
 import { TerminalButton } from "@/components/hub/TerminalButton";
 import { getTool } from "@/lib/tools";
 import { toast } from "sonner";
-import { Plus, Trash2, Copy, Shuffle } from "lucide-react";
+import { Plus, Trash2, Copy, Shuffle, Download } from "lucide-react";
 
 /* ---------- color math ---------- */
 
@@ -71,13 +71,23 @@ const contrastRatio = (a: string, b: string) => {
 const randomHex = () =>
   "#" + Array.from({ length: 6 }, () => "0123456789ABCDEF"[Math.floor(Math.random() * 16)]).join("");
 
-/* ---------- copy helper ---------- */
+/* ---------- copy / download helpers ---------- */
 
 const useCopy = () =>
   useCallback(async (text: string, label = "copied") => {
     await navigator.clipboard.writeText(text);
     toast.success(label);
   }, []);
+
+const downloadText = (filename: string, text: string) => {
+  const blob = new Blob([text], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+};
 
 /* ---------- Converter tab ---------- */
 
@@ -385,9 +395,14 @@ const GradientBuilder = () => {
                 <code className="flex-1 bg-input/30 border border-border p-2 text-xs font-mono break-all">
                   {value}
                 </code>
-                <TerminalButton onClick={() => copy(value, `${label} copied`)}>
-                  <Copy className="h-3 w-3" />
-                </TerminalButton>
+                <div className="flex flex-col gap-1">
+                  <TerminalButton onClick={() => copy(value, `${label} copied`)} title="Copy">
+                    <Copy className="h-3 w-3" />
+                  </TerminalButton>
+                  <TerminalButton onClick={() => downloadText(`gradient-${label.toLowerCase().replace(/[()\s]+/g, "-")}.txt`, value)} title="Download">
+                    <Download className="h-3 w-3" />
+                  </TerminalButton>
+                </div>
               </div>
             </div>
           ))}
@@ -472,6 +487,26 @@ const Palette = () => {
         <PaletteBlock title="Complementary" colors={[base, rgbToHex(complement.r, complement.g, complement.b)]} onCopy={copy} />
         <PaletteBlock title="Triadic" colors={[base, ...triad]} onCopy={copy} />
         <PaletteBlock title="Analogous" colors={[analogous[0], base, analogous[1]]} onCopy={copy} />
+      </div>
+
+      <div className="border border-border p-3 flex flex-wrap items-center gap-2">
+        <span className="text-[11px] uppercase tracking-widest text-muted-foreground mr-1">export:</span>
+        <TerminalButton onClick={() => {
+          const css = `:root {\n${shades.map((s) => `  --shade-${s.l}: ${s.hex};`).join("\n")}\n  --base: ${base};\n  --complement: ${rgbToHex(complement.r, complement.g, complement.b)};\n${triad.map((c, i) => `  --triad-${i + 1}: ${c};`).join("\n")}\n${analogous.map((c, i) => `  --analogous-${i + 1}: ${c};`).join("\n")}\n}`;
+          copy(css, "Palette CSS copied");
+        }}>Copy CSS</TerminalButton>
+        <TerminalButton onClick={() => {
+          const css = `:root {\n${shades.map((s) => `  --shade-${s.l}: ${s.hex};`).join("\n")}\n  --base: ${base};\n  --complement: ${rgbToHex(complement.r, complement.g, complement.b)};\n${triad.map((c, i) => `  --triad-${i + 1}: ${c};`).join("\n")}\n${analogous.map((c, i) => `  --analogous-${i + 1}: ${c};`).join("\n")}\n}`;
+          downloadText("palette.css", css);
+        }}>Download CSS</TerminalButton>
+        <TerminalButton onClick={() => {
+          const tw = `colors: {\n  primary: {\n${shades.map((s) => `    ${s.l}: '${s.hex.toLowerCase()}',`).join("\n")}\n  },\n  base: '${base.toLowerCase()}',\n  complement: '${rgbToHex(complement.r, complement.g, complement.b).toLowerCase()}',\n  triad: [${triad.map((c) => `'${c.toLowerCase()}'`).join(", ")}],\n  analogous: [${analogous.map((c) => `'${c.toLowerCase()}'`).join(", ")}],\n}`;
+          copy(tw, "Tailwind config copied");
+        }}>Copy Tailwind</TerminalButton>
+        <TerminalButton onClick={() => {
+          const tw = `colors: {\n  primary: {\n${shades.map((s) => `    ${s.l}: '${s.hex.toLowerCase()}',`).join("\n")}\n  },\n  base: '${base.toLowerCase()}',\n  complement: '${rgbToHex(complement.r, complement.g, complement.b).toLowerCase()}',\n  triad: [${triad.map((c) => `'${c.toLowerCase()}'`).join(", ")}],\n  analogous: [${analogous.map((c) => `'${c.toLowerCase()}'`).join(", ")}],\n}`;
+          downloadText("palette-tailwind.txt", tw);
+        }}>Download Tailwind</TerminalButton>
       </div>
     </div>
   );
