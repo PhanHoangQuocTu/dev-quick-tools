@@ -395,9 +395,14 @@ const GradientBuilder = () => {
                 <code className="flex-1 bg-input/30 border border-border p-2 text-xs font-mono break-all">
                   {value}
                 </code>
-                <TerminalButton onClick={() => copy(value, `${label} copied`)}>
-                  <Copy className="h-3 w-3" />
-                </TerminalButton>
+                <div className="flex flex-col gap-1">
+                  <TerminalButton onClick={() => copy(value, `${label} copied`)} title="Copy">
+                    <Copy className="h-3 w-3" />
+                  </TerminalButton>
+                  <TerminalButton onClick={() => downloadText(`gradient-${label.toLowerCase().replace(/[()\s]+/g, "-")}.txt`, value)} title="Download">
+                    <Download className="h-3 w-3" />
+                  </TerminalButton>
+                </div>
               </div>
             </div>
           ))}
