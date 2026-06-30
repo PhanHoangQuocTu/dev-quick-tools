@@ -89,6 +89,30 @@ const downloadText = (filename: string, text: string) => {
   URL.revokeObjectURL(url);
 };
 
+/* ---------- shared setup preview block ---------- */
+
+const SetupBlock = ({ label, code, filename }: { label: string; code: string; filename: string }) => {
+  const copy = useCopy();
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] uppercase tracking-widest text-muted-foreground">{label}</span>
+        <div className="flex items-center gap-2">
+          <TerminalButton onClick={() => copy(code, `${label} copied`)}>
+            <Copy className="h-3 w-3" /> Copy
+          </TerminalButton>
+          <TerminalButton onClick={() => downloadText(filename, code)}>
+            <Download className="h-3 w-3" /> Download
+          </TerminalButton>
+        </div>
+      </div>
+      <pre className="bg-input/30 border border-border p-3 text-xs font-mono overflow-x-auto whitespace-pre">
+        <code>{code}</code>
+      </pre>
+    </div>
+  );
+};
+
 /* ---------- Converter tab ---------- */
 
 type Mode = "hex" | "rgb" | "hsl";
@@ -273,6 +297,18 @@ const GradientBuilder = () => {
 
   const cssBlock = `background: ${gradient};`;
 
+  const setupCode = useMemo(() => {
+    const lines: string[] = [];
+    sorted.forEach((s, i) => {
+      lines.push(`  --gradient-stop-${i + 1}: ${s.color};`);
+      lines.push(`  --gradient-pos-${i + 1}: ${s.pos}%;`);
+    });
+    lines.push(`  --gradient-type: ${type};`);
+    if (type !== "radial") lines.push(`  --gradient-angle: ${angle}deg;`);
+    lines.push(`  --gradient-bg: ${gradient};`);
+    return `:root {\n${lines.join("\n")}\n}`;
+  }, [sorted, type, angle, gradient]);
+
   const update = (i: number, patch: Partial<Stop>) =>
     setStops((s) => s.map((st, idx) => (idx === i ? { ...st, ...patch } : st)));
 
@@ -408,6 +444,12 @@ const GradientBuilder = () => {
           ))}
         </div>
       </div>
+
+      <SetupBlock
+        label="CSS Variables Setup — paste into :root"
+        code={setupCode}
+        filename="gradient-setup.css"
+      />
     </div>
   );
 };
@@ -433,9 +475,10 @@ const Palette = () => {
   if (!rgb) return <div className="text-destructive text-sm font-mono">invalid base color</div>;
   const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
 
-  const shades = [95, 90, 80, 70, 60, 50, 40, 30, 20, 10].map((l) => {
+  const shadeNames = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900];
+  const shades = [95, 90, 80, 70, 60, 50, 40, 30, 20, 10].map((l, i) => {
     const c = hslToRgb(hsl.h, hsl.s, l);
-    return { l, hex: rgbToHex(c.r, c.g, c.b) };
+    return { l, name: shadeNames[i], hex: rgbToHex(c.r, c.g, c.b) };
   });
   const complement = hslToRgb((hsl.h + 180) % 360, hsl.s, hsl.l);
   const triad = [120, 240].map((d) => {
@@ -446,6 +489,8 @@ const Palette = () => {
     const c = hslToRgb((hsl.h + d + 360) % 360, hsl.s, hsl.l);
     return rgbToHex(c.r, c.g, c.b);
   });
+
+  const setupCode = `:root {\n${shades.map((s) => `  --color-${s.name}: ${s.hex};`).join("\n")}\n  --color-base: ${base};\n  --color-complement: ${rgbToHex(complement.r, complement.g, complement.b)};\n${triad.map((c, i) => `  --color-triad-${i + 1}: ${c};`).join("\n")}\n${analogous.map((c, i) => `  --color-analogous-${i + 1}: ${c};`).join("\n")}\n}`;
 
   return (
     <div className="flex flex-col gap-5">
@@ -467,17 +512,18 @@ const Palette = () => {
       </div>
 
       <div>
-        <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">shades (lightness 95% → 10%)</div>
+        <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">shades</div>
         <div className="grid grid-cols-5 md:grid-cols-10 gap-1">
           {shades.map((s) => (
             <button
-              key={s.l}
+              key={s.name}
               onClick={() => copy(s.hex, s.hex)}
-              className="aspect-square border border-border flex items-end justify-center pb-1 text-[10px] font-mono hover:scale-105 transition-transform"
+              className="aspect-square border border-border flex flex-col items-center justify-center gap-0.5 text-[10px] font-mono hover:scale-105 transition-transform"
               style={{ background: s.hex, color: contrastColor(...(Object.values(hexToRgb(s.hex)!) as [number, number, number])) }}
               title={s.hex}
             >
-              {s.hex.slice(1)}
+              <span className="font-bold">{s.name}</span>
+              <span className="opacity-80">{s.hex.slice(1)}</span>
             </button>
           ))}
         </div>
@@ -492,22 +538,28 @@ const Palette = () => {
       <div className="border border-border p-3 flex flex-wrap items-center gap-2">
         <span className="text-[11px] uppercase tracking-widest text-muted-foreground mr-1">export:</span>
         <TerminalButton onClick={() => {
-          const css = `:root {\n${shades.map((s) => `  --shade-${s.l}: ${s.hex};`).join("\n")}\n  --base: ${base};\n  --complement: ${rgbToHex(complement.r, complement.g, complement.b)};\n${triad.map((c, i) => `  --triad-${i + 1}: ${c};`).join("\n")}\n${analogous.map((c, i) => `  --analogous-${i + 1}: ${c};`).join("\n")}\n}`;
+          const css = `:root {\n${shades.map((s) => `  --color-${s.name}: ${s.hex};`).join("\n")}\n  --color-base: ${base};\n  --color-complement: ${rgbToHex(complement.r, complement.g, complement.b)};\n${triad.map((c, i) => `  --color-triad-${i + 1}: ${c};`).join("\n")}\n${analogous.map((c, i) => `  --color-analogous-${i + 1}: ${c};`).join("\n")}\n}`;
           copy(css, "Palette CSS copied");
         }}>Copy CSS</TerminalButton>
         <TerminalButton onClick={() => {
-          const css = `:root {\n${shades.map((s) => `  --shade-${s.l}: ${s.hex};`).join("\n")}\n  --base: ${base};\n  --complement: ${rgbToHex(complement.r, complement.g, complement.b)};\n${triad.map((c, i) => `  --triad-${i + 1}: ${c};`).join("\n")}\n${analogous.map((c, i) => `  --analogous-${i + 1}: ${c};`).join("\n")}\n}`;
+          const css = `:root {\n${shades.map((s) => `  --color-${s.name}: ${s.hex};`).join("\n")}\n  --color-base: ${base};\n  --color-complement: ${rgbToHex(complement.r, complement.g, complement.b)};\n${triad.map((c, i) => `  --color-triad-${i + 1}: ${c};`).join("\n")}\n${analogous.map((c, i) => `  --color-analogous-${i + 1}: ${c};`).join("\n")}\n}`;
           downloadText("palette.css", css);
         }}>Download CSS</TerminalButton>
         <TerminalButton onClick={() => {
-          const tw = `colors: {\n  primary: {\n${shades.map((s) => `    ${s.l}: '${s.hex.toLowerCase()}',`).join("\n")}\n  },\n  base: '${base.toLowerCase()}',\n  complement: '${rgbToHex(complement.r, complement.g, complement.b).toLowerCase()}',\n  triad: [${triad.map((c) => `'${c.toLowerCase()}'`).join(", ")}],\n  analogous: [${analogous.map((c) => `'${c.toLowerCase()}'`).join(", ")}],\n}`;
+          const tw = `colors: {\n  primary: {\n${shades.map((s) => `    ${s.name}: '${s.hex.toLowerCase()}',`).join("\n")}\n  },\n  base: '${base.toLowerCase()}',\n  complement: '${rgbToHex(complement.r, complement.g, complement.b).toLowerCase()}',\n  triad: [${triad.map((c) => `'${c.toLowerCase()}'`).join(", ")}],\n  analogous: [${analogous.map((c) => `'${c.toLowerCase()}'`).join(", ")}],\n}`;
           copy(tw, "Tailwind config copied");
         }}>Copy Tailwind</TerminalButton>
         <TerminalButton onClick={() => {
-          const tw = `colors: {\n  primary: {\n${shades.map((s) => `    ${s.l}: '${s.hex.toLowerCase()}',`).join("\n")}\n  },\n  base: '${base.toLowerCase()}',\n  complement: '${rgbToHex(complement.r, complement.g, complement.b).toLowerCase()}',\n  triad: [${triad.map((c) => `'${c.toLowerCase()}'`).join(", ")}],\n  analogous: [${analogous.map((c) => `'${c.toLowerCase()}'`).join(", ")}],\n}`;
+          const tw = `colors: {\n  primary: {\n${shades.map((s) => `    ${s.name}: '${s.hex.toLowerCase()}',`).join("\n")}\n  },\n  base: '${base.toLowerCase()}',\n  complement: '${rgbToHex(complement.r, complement.g, complement.b).toLowerCase()}',\n  triad: [${triad.map((c) => `'${c.toLowerCase()}'`).join(", ")}],\n  analogous: [${analogous.map((c) => `'${c.toLowerCase()}'`).join(", ")}],\n}`;
           downloadText("palette-tailwind.txt", tw);
         }}>Download Tailwind</TerminalButton>
       </div>
+
+      <SetupBlock
+        label="CSS Variables Setup — paste into :root"
+        code={setupCode}
+        filename="palette-setup.css"
+      />
     </div>
   );
 };
