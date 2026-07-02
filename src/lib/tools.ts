@@ -57,6 +57,7 @@ export const tools: Tool[] = [
   { slug: "svgo", name: "SVG Minifier", symbol: "<S>", short: "Minify SVG markup.", description: "Strip comments, whitespace and metadata from SVG markup with live preview.", icon: Scissors, category: "Image" },
 
   // Reference
+  { slug: "starter", name: "Project Starter", symbol: "▶", short: "Scaffold a new project.", description: "Generate a base project (Next.js or Vite) with TanStack Query, Tailwind, Zod, RHF, Biome/ESLint, lucide-react and SVGR wired up.", icon: Rocket, category: "Reference" },
   { slug: "cheatsheet", name: "Cheat Sheets", symbol: "?", short: "git, docker, vim, regex…", description: "Quick command reference for git, docker, vim, regex, bash and tmux.", icon: BookOpen, category: "Reference" },
   { slug: "gitignore", name: ".gitignore Gen", symbol: ".gi", short: "Build a .gitignore file.", description: "Pick your stacks and generate a combined .gitignore file.", icon: FileX, category: "Reference" },
 ];
