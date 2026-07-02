@@ -35,6 +35,7 @@ import PasswordTool from "./pages/tools/PasswordTool";
 import JsonSchemaTool from "./pages/tools/JsonSchemaTool";
 import SvgTool from "./pages/tools/SvgTool";
 import ImageCompressTool from "./pages/tools/ImageCompressTool";
+import StarterTool from "./pages/tools/StarterTool";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +77,7 @@ const App = () => (
             <Route path="/jsonschema" element={<JsonSchemaTool />} />
             <Route path="/svgo" element={<SvgTool />} />
             <Route path="/imgcompress" element={<ImageCompressTool />} />
+            <Route path="/starter" element={<StarterTool />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
