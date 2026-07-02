@@ -2,7 +2,7 @@ import {
   Braces, Binary, Clock, Regex, GitCompare, Database, Code2, Palette, Fingerprint,
   Table, Hash, KeyRound, Type, Link as LinkIcon, FileText, QrCode, CalendarClock,
   ShieldAlert, FileCode, FileJson, Image as ImageIcon, BookOpen, FileX, ListChecks,
-  Calculator, Lock, Braces as BracesIcon, Scissors, ImageDown,
+  Calculator, Lock, Braces as BracesIcon, Scissors, ImageDown, Rocket,
   type LucideIcon,
 } from "lucide-react";
 
