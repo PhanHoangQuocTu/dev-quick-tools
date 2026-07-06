@@ -382,7 +382,7 @@ export function QueryProvider({ children }: { children: ReactNode }) {
   // Zod + RHF
   if (o.zod && o.rhf) {
     files.push({
-      path: "src/components/example-form.tsx",
+      path: "src/components/forms/example-form.tsx",
       language: "tsx",
       content: `'use client';
 
@@ -422,12 +422,17 @@ export function ExampleForm() {
 }
 `,
     });
+    files.push({
+      path: "src/components/forms/index.ts",
+      language: "ts",
+      content: `export * from './example-form';\n`,
+    });
   }
 
   // Lucide icon barrel
   if (o.lucide) {
     files.push({
-      path: "src/components/icons.tsx",
+      path: "src/components/icons/index.tsx",
       language: "tsx",
       content: `import type { ForwardRefExoticComponent, RefAttributes, SVGProps } from 'react';
 import {
@@ -465,6 +470,7 @@ export const Icons = IconList as Record<keyof typeof IconList, Icon>;
 `,
     });
   }
+
 
   // Biome
   if (o.linter === "biome") {
