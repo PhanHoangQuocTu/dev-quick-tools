@@ -377,7 +377,13 @@ export function QueryProvider({ children }: { children: ReactNode }) {
 }
 `,
     });
+    files.push({
+      path: "src/providers/index.tsx",
+      language: "tsx",
+      content: `'use client';\n\nimport type { ReactNode } from 'react';\nimport { QueryProvider } from './query-provider';\n\n/** Compose all app-wide providers here so pages only wrap one component. */\nexport function AppProviders({ children }: { children: ReactNode }) {\n  return <QueryProvider>{children}</QueryProvider>;\n}\n\nexport { QueryProvider };\n`,
+    });
   }
+
 
   // Zod + RHF
   if (o.zod && o.rhf) {
