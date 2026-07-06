@@ -24,6 +24,10 @@ interface StackOptions {
   lucide: boolean;
   svgr: boolean;
   nextIntl: boolean;
+  decimal: boolean;
+  hooks: boolean;
+  utils: boolean;
+  dateFns: boolean;
 }
 
 interface FileOut {
