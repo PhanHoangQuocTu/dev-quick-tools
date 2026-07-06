@@ -148,6 +148,32 @@ ${o.tanstack ? "- TanStack React Query\n" : ""}${o.tailwind ? "- Tailwind CSS\n"
 pnpm install
 pnpm dev
 \`\`\`
+
+## Folder structure
+\`\`\`
+src/
+  app/ or pages/           # framework routes
+  components/
+    forms/                 # form components (RHF + Zod)
+    icons/                 # lucide icon barrel
+  hooks/                   # reusable client hooks (barrel: @/hooks)
+  lib/
+    utils/                 # cn, format, slugify   -> @/lib/utils
+    http/                  # apiFetch, HttpError   -> @/lib/http
+    config/                # env, constants        -> @/lib/config
+    math/                  # decimal.js helpers    -> @/lib/math
+    index.ts               # single barrel: @/lib
+  providers/               # AppProviders composition
+  styles/                  # globals.css
+  types/                   # global TS types + svg.d.ts
+\`\`\`
+
+Import from barrels for a clean surface:
+\`\`\`ts
+import { cn, apiFetch, env, add, toCurrency } from '@/lib';
+import { useDebounce, useMediaQuery } from '@/hooks';
+import { Icons } from '@/components/icons';
+\`\`\`
 `,
   });
 
@@ -291,7 +317,7 @@ export default defineConfig({
 export default {
   content: [
     './src/**/*.{ts,tsx,mdx}',
-    ${o.framework === "next" ? "'./app/**/*.{ts,tsx,mdx}'," : ""}
+    ${o.framework === "next" ? "'./app/**/*.{ts,tsx,mdx}',\n    './src/app/**/*.{ts,tsx,mdx}'," : ""}
   ],
   theme: {
     extend: {
@@ -377,12 +403,18 @@ export function QueryProvider({ children }: { children: ReactNode }) {
 }
 `,
     });
+    files.push({
+      path: "src/providers/index.tsx",
+      language: "tsx",
+      content: `'use client';\n\nimport type { ReactNode } from 'react';\nimport { QueryProvider } from './query-provider';\n\n/** Compose all app-wide providers here so pages only wrap one component. */\nexport function AppProviders({ children }: { children: ReactNode }) {\n  return <QueryProvider>{children}</QueryProvider>;\n}\n\nexport { QueryProvider };\n`,
+    });
   }
+
 
   // Zod + RHF
   if (o.zod && o.rhf) {
     files.push({
-      path: "src/components/example-form.tsx",
+      path: "src/components/forms/example-form.tsx",
       language: "tsx",
       content: `'use client';
 
@@ -422,12 +454,17 @@ export function ExampleForm() {
 }
 `,
     });
+    files.push({
+      path: "src/components/forms/index.ts",
+      language: "ts",
+      content: `export * from './example-form';\n`,
+    });
   }
 
   // Lucide icon barrel
   if (o.lucide) {
     files.push({
-      path: "src/components/icons.tsx",
+      path: "src/components/icons/index.tsx",
       language: "tsx",
       content: `import type { ForwardRefExoticComponent, RefAttributes, SVGProps } from 'react';
 import {
@@ -465,6 +502,7 @@ export const Icons = IconList as Record<keyof typeof IconList, Icon>;
 `,
     });
   }
+
 
   // Biome
   if (o.linter === "biome") {
@@ -577,10 +615,10 @@ NEXT_PUBLIC_API_URL=http://localhost:3000
     });
   }
 
-  // cn() utility + fetcher + format + typed env
+  // Base utils — grouped by concern under src/lib/{utils,http,config}
   if (o.utils) {
     files.push({
-      path: "src/lib/cn.ts",
+      path: "src/lib/utils/cn.ts",
       language: "ts",
       content: `import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -593,7 +631,7 @@ export function cn(...inputs: ClassValue[]): string {
     });
 
     files.push({
-      path: "src/lib/format.ts",
+      path: "src/lib/utils/format.ts",
       language: "ts",
       content: `/** Formatting helpers for numbers, currency, and dates. */
 export const formatNumber = (n: number, locale = 'en-US', opts?: Intl.NumberFormatOptions) =>
@@ -629,7 +667,13 @@ export const slugify = (s: string) =>
     });
 
     files.push({
-      path: "src/lib/fetcher.ts",
+      path: "src/lib/utils/index.ts",
+      language: "ts",
+      content: `export * from './cn';\nexport * from './format';\n`,
+    });
+
+    files.push({
+      path: "src/lib/http/fetcher.ts",
       language: "ts",
       content: `/** Typed fetch wrapper that throws on non-2xx and parses JSON. */
 export class HttpError extends Error {
@@ -674,9 +718,15 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
 `,
     });
 
+    files.push({
+      path: "src/lib/http/index.ts",
+      language: "ts",
+      content: `export * from './fetcher';\n`,
+    });
+
     if (o.zod) {
       files.push({
-        path: "src/lib/env.ts",
+        path: "src/lib/config/env.ts",
         language: "ts",
         content: `import { z } from 'zod';
 
@@ -702,7 +752,7 @@ export const env = parsed.data;
     }
 
     files.push({
-      path: "src/lib/constants.ts",
+      path: "src/lib/config/constants.ts",
       language: "ts",
       content: `export const APP_NAME = '${o.appName || "my-app"}';
 export const SITE_URL = 'https://example.com';
@@ -715,6 +765,12 @@ export const ROUTES = {
 
 export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES];
 `,
+    });
+
+    files.push({
+      path: "src/lib/config/index.ts",
+      language: "ts",
+      content: `export * from './constants';\n${o.zod ? "export * from './env';\n" : ""}`,
     });
 
     files.push({
@@ -742,7 +798,7 @@ export interface ApiResponse<T> {
   // decimal.js money/calc helpers
   if (o.decimal) {
     files.push({
-      path: "src/lib/decimal.ts",
+      path: "src/lib/math/decimal.ts",
       language: "ts",
       content: `import Decimal from 'decimal.js';
 
@@ -792,7 +848,30 @@ export const clamp = (v: Numeric, min: Numeric, max: Numeric): Decimal =>
 export { Decimal };
 `,
     });
+
+    files.push({
+      path: "src/lib/math/index.ts",
+      language: "ts",
+      content: `export * from './decimal';\n`,
+    });
   }
+
+  // Top-level lib barrel — single import site: `import { cn, apiFetch, env } from '@/lib'`
+  if (o.utils || o.decimal) {
+    const parts: string[] = [];
+    if (o.utils) {
+      parts.push("export * from './utils';");
+      parts.push("export * from './http';");
+      parts.push("export * from './config';");
+    }
+    if (o.decimal) parts.push("export * from './math';");
+    files.push({
+      path: "src/lib/index.ts",
+      language: "ts",
+      content: parts.join("\n") + "\n",
+    });
+  }
+
 
   // Reusable hooks — framework-aware
   if (o.hooks) {
