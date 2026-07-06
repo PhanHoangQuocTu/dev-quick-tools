@@ -95,6 +95,12 @@ function buildFiles(o: StackOptions): FileOut[] {
     if (o.framework === "next") devDeps["eslint-config-next"] = "^15.0.0";
   }
   if (o.nextIntl && o.framework === "next") deps["next-intl"] = "^3.22.0";
+  if (o.decimal) deps["decimal.js"] = "^10.4.3";
+  if (o.dateFns) deps["date-fns"] = "^4.1.0";
+  if (o.utils) {
+    deps["clsx"] = "^2.1.1";
+    deps["tailwind-merge"] = "^2.5.0";
+  }
 
   const scripts: Record<string, string> =
     o.framework === "next"
