@@ -24,6 +24,10 @@ interface StackOptions {
   lucide: boolean;
   svgr: boolean;
   nextIntl: boolean;
+  decimal: boolean;
+  hooks: boolean;
+  utils: boolean;
+  dateFns: boolean;
 }
 
 interface FileOut {
@@ -91,6 +95,12 @@ function buildFiles(o: StackOptions): FileOut[] {
     if (o.framework === "next") devDeps["eslint-config-next"] = "^15.0.0";
   }
   if (o.nextIntl && o.framework === "next") deps["next-intl"] = "^3.22.0";
+  if (o.decimal) deps["decimal.js"] = "^10.4.3";
+  if (o.dateFns) deps["date-fns"] = "^4.1.0";
+  if (o.utils) {
+    deps["clsx"] = "^2.1.1";
+    deps["tailwind-merge"] = "^2.5.0";
+  }
 
   const scripts: Record<string, string> =
     o.framework === "next"
@@ -567,6 +577,406 @@ NEXT_PUBLIC_API_URL=http://localhost:3000
     });
   }
 
+  // cn() utility + fetcher + format + typed env
+  if (o.utils) {
+    files.push({
+      path: "src/lib/cn.ts",
+      language: "ts",
+      content: `import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+/** Merge Tailwind class names with clsx + tailwind-merge. */
+export function cn(...inputs: ClassValue[]): string {
+  return twMerge(clsx(inputs));
+}
+`,
+    });
+
+    files.push({
+      path: "src/lib/format.ts",
+      language: "ts",
+      content: `/** Formatting helpers for numbers, currency, and dates. */
+export const formatNumber = (n: number, locale = 'en-US', opts?: Intl.NumberFormatOptions) =>
+  new Intl.NumberFormat(locale, opts).format(n);
+
+export const formatCurrency = (n: number, currency = 'USD', locale = 'en-US') =>
+  new Intl.NumberFormat(locale, { style: 'currency', currency }).format(n);
+
+export const formatPercent = (n: number, digits = 2, locale = 'en-US') =>
+  new Intl.NumberFormat(locale, {
+    style: 'percent',
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(n);
+
+export const formatDate = (d: Date | string | number, locale = 'en-US') =>
+  new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(d));
+
+export const formatDateTime = (d: Date | string | number, locale = 'en-US') =>
+  new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(d));
+
+export const truncate = (s: string, max = 80) =>
+  s.length <= max ? s : s.slice(0, max - 1) + '…';
+
+export const slugify = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\\u0300-\\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+`,
+    });
+
+    files.push({
+      path: "src/lib/fetcher.ts",
+      language: "ts",
+      content: `/** Typed fetch wrapper that throws on non-2xx and parses JSON. */
+export class HttpError extends Error {
+  constructor(public status: number, public payload: unknown, message?: string) {
+    super(message ?? \`HTTP \${status}\`);
+    this.name = 'HttpError';
+  }
+}
+
+export interface RequestOptions extends Omit<RequestInit, 'body'> {
+  body?: unknown;
+  baseUrl?: string;
+  timeoutMs?: number;
+}
+
+export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const { body, baseUrl = '', timeoutMs = 15_000, headers, ...rest } = options;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(\`\${baseUrl}\${path}\`, {
+      ...rest,
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...headers,
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+
+    const isJson = res.headers.get('content-type')?.includes('application/json');
+    const payload = isJson ? await res.json().catch(() => null) : await res.text();
+
+    if (!res.ok) throw new HttpError(res.status, payload);
+    return payload as T;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+`,
+    });
+
+    if (o.zod) {
+      files.push({
+        path: "src/lib/env.ts",
+        language: "ts",
+        content: `import { z } from 'zod';
+
+/** Typed & validated env. Fails fast at boot if variables are missing. */
+const schema = z.object({
+  NEXT_PUBLIC_APP_ENV: z.enum(['development', 'staging', 'production']).default('development'),
+  NEXT_PUBLIC_API_URL: z.string().url().default('http://localhost:3000'),
+});
+
+const parsed = schema.safeParse({
+  NEXT_PUBLIC_APP_ENV: ${o.framework === "next" ? "process.env.NEXT_PUBLIC_APP_ENV" : "import.meta.env.VITE_APP_ENV"},
+  NEXT_PUBLIC_API_URL: ${o.framework === "next" ? "process.env.NEXT_PUBLIC_API_URL" : "import.meta.env.VITE_API_URL"},
+});
+
+if (!parsed.success) {
+  console.error('❌ Invalid environment variables:', parsed.error.flatten().fieldErrors);
+  throw new Error('Invalid environment variables');
+}
+
+export const env = parsed.data;
+`,
+      });
+    }
+
+    files.push({
+      path: "src/lib/constants.ts",
+      language: "ts",
+      content: `export const APP_NAME = '${o.appName || "my-app"}';
+export const SITE_URL = 'https://example.com';
+
+export const ROUTES = {
+  home: '/',
+  dashboard: '/dashboard',
+  login: '/login',
+} as const;
+
+export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES];
+`,
+    });
+
+    files.push({
+      path: "src/types/index.ts",
+      language: "ts",
+      content: `export type Nullable<T> = T | null;
+export type Maybe<T> = T | null | undefined;
+export type Awaitable<T> = T | Promise<T>;
+export type Prettify<T> = { [K in keyof T]: T[K] } & {};
+
+export interface Pagination {
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
+export interface ApiResponse<T> {
+  data: T;
+  meta?: Pagination;
+}
+`,
+    });
+  }
+
+  // decimal.js money/calc helpers
+  if (o.decimal) {
+    files.push({
+      path: "src/lib/decimal.ts",
+      language: "ts",
+      content: `import Decimal from 'decimal.js';
+
+/**
+ * Precision-safe arithmetic helpers built on decimal.js.
+ * Use these instead of raw number math for money, quantities, or anything user-facing.
+ */
+
+Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP });
+
+export type Numeric = Decimal.Value;
+
+export const d = (v: Numeric): Decimal => new Decimal(v);
+
+export const add = (a: Numeric, b: Numeric): Decimal => d(a).plus(b);
+export const sub = (a: Numeric, b: Numeric): Decimal => d(a).minus(b);
+export const mul = (a: Numeric, b: Numeric): Decimal => d(a).times(b);
+export const div = (a: Numeric, b: Numeric): Decimal => {
+  if (d(b).isZero()) throw new Error('Division by zero');
+  return d(a).div(b);
+};
+
+/** Sum an array of numeric values without floating-point drift. */
+export const sum = (values: Numeric[]): Decimal =>
+  values.reduce<Decimal>((acc, v) => acc.plus(v), new Decimal(0));
+
+/** Percentage of a value: percentOf(200, 15) -> 30 */
+export const percentOf = (value: Numeric, percent: Numeric): Decimal =>
+  d(value).times(d(percent).div(100));
+
+/** Round to N decimal places (banker's default via ROUND_HALF_UP above). */
+export const round = (v: Numeric, decimals = 2): Decimal =>
+  d(v).toDecimalPlaces(decimals);
+
+/** Format a decimal as a fixed-decimal string. */
+export const toFixed = (v: Numeric, decimals = 2): string =>
+  d(v).toFixed(decimals);
+
+/** Format a decimal as currency using Intl. */
+export const toCurrency = (v: Numeric, currency = 'USD', locale = 'en-US'): string =>
+  new Intl.NumberFormat(locale, { style: 'currency', currency }).format(d(v).toNumber());
+
+/** Clamp a decimal between min and max (inclusive). */
+export const clamp = (v: Numeric, min: Numeric, max: Numeric): Decimal =>
+  Decimal.max(d(min), Decimal.min(d(max), d(v)));
+
+export { Decimal };
+`,
+    });
+  }
+
+  // Reusable hooks — framework-aware
+  if (o.hooks) {
+    const useClient = o.framework === "next" ? "'use client';\n\n" : "";
+
+    files.push({
+      path: "src/hooks/use-debounce.ts",
+      language: "ts",
+      content: `${useClient}import { useEffect, useState } from 'react';
+
+/** Returns a value that only updates after \`delay\` ms of stability. */
+export function useDebounce<T>(value: T, delay = 300): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+}
+`,
+    });
+
+    files.push({
+      path: "src/hooks/use-mounted.ts",
+      language: "ts",
+      content: `${useClient}import { useEffect, useState } from 'react';
+
+/** True after the first client render. Useful to avoid hydration mismatch. */
+export function useMounted(): boolean {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  return mounted;
+}
+`,
+    });
+
+    files.push({
+      path: "src/hooks/use-media-query.ts",
+      language: "ts",
+      content: `${useClient}import { useEffect, useState } from 'react';
+
+/** Reactive CSS media query. SSR-safe (returns false on server). */
+export function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia(query);
+    const onChange = () => setMatches(mql.matches);
+    onChange();
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, [query]);
+  return matches;
+}
+`,
+    });
+
+    files.push({
+      path: "src/hooks/use-local-storage.ts",
+      language: "ts",
+      content: `${useClient}import { useCallback, useEffect, useState } from 'react';
+
+/** Typed localStorage state that syncs across tabs. */
+export function useLocalStorage<T>(key: string, initial: T) {
+  const [value, setValue] = useState<T>(() => {
+    if (typeof window === 'undefined') return initial;
+    try {
+      const raw = window.localStorage.getItem(key);
+      return raw ? (JSON.parse(raw) as T) : initial;
+    } catch {
+      return initial;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      /* quota or serialization errors are non-fatal */
+    }
+  }, [key, value]);
+
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === key && e.newValue) {
+        try {
+          setValue(JSON.parse(e.newValue) as T);
+        } catch {
+          /* ignore */
+        }
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [key]);
+
+  const remove = useCallback(() => {
+    window.localStorage.removeItem(key);
+    setValue(initial);
+  }, [key, initial]);
+
+  return [value, setValue, remove] as const;
+}
+`,
+    });
+
+    files.push({
+      path: "src/hooks/use-copy-to-clipboard.ts",
+      language: "ts",
+      content: `${useClient}import { useCallback, useState } from 'react';
+
+export function useCopyToClipboard(resetMs = 1500) {
+  const [copied, setCopied] = useState(false);
+
+  const copy = useCallback(
+    async (text: string) => {
+      try {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), resetMs);
+        return true;
+      } catch {
+        setCopied(false);
+        return false;
+      }
+    },
+    [resetMs],
+  );
+
+  return { copied, copy };
+}
+`,
+    });
+
+    files.push({
+      path: "src/hooks/use-on-click-outside.ts",
+      language: "ts",
+      content: `${useClient}import { useEffect, type RefObject } from 'react';
+
+export function useOnClickOutside<T extends HTMLElement>(
+  ref: RefObject<T>,
+  handler: (event: MouseEvent | TouchEvent) => void,
+) {
+  useEffect(() => {
+    const listener = (event: MouseEvent | TouchEvent) => {
+      const el = ref.current;
+      if (!el || el.contains(event.target as Node)) return;
+      handler(event);
+    };
+    document.addEventListener('mousedown', listener);
+    document.addEventListener('touchstart', listener);
+    return () => {
+      document.removeEventListener('mousedown', listener);
+      document.removeEventListener('touchstart', listener);
+    };
+  }, [ref, handler]);
+}
+`,
+    });
+
+    files.push({
+      path: "src/hooks/use-isomorphic-layout-effect.ts",
+      language: "ts",
+      content: `import { useEffect, useLayoutEffect } from 'react';
+
+/** Use useLayoutEffect on the client, fall back to useEffect on the server. */
+export const useIsomorphicLayoutEffect =
+  typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+`,
+    });
+
+    files.push({
+      path: "src/hooks/index.ts",
+      language: "ts",
+      content: `export * from './use-debounce';
+export * from './use-mounted';
+export * from './use-media-query';
+export * from './use-local-storage';
+export * from './use-copy-to-clipboard';
+export * from './use-on-click-outside';
+export * from './use-isomorphic-layout-effect';
+`,
+    });
+  }
+
   return files;
 }
 
@@ -583,6 +993,10 @@ const StarterTool = () => {
     lucide: true,
     svgr: true,
     nextIntl: false,
+    decimal: true,
+    hooks: true,
+    utils: true,
+    dateFns: false,
   });
   const [copied, setCopied] = useState<string | null>(null);
 
@@ -691,6 +1105,10 @@ const StarterTool = () => {
             <Toggle id="rhf" label="React Hook Form" hint="Forms + resolvers" checked={opts.rhf} onChange={(v) => setOpts({ ...opts, rhf: v })} />
             <Toggle id="lucide" label="lucide-react" hint="Icon library" checked={opts.lucide} onChange={(v) => setOpts({ ...opts, lucide: v })} />
             <Toggle id="svgr" label="SVGR" hint="Import .svg as React components" checked={opts.svgr} onChange={(v) => setOpts({ ...opts, svgr: v })} />
+            <Toggle id="utils" label="Base utils" hint="cn(), fetcher, format, env, constants, types" checked={opts.utils} onChange={(v) => setOpts({ ...opts, utils: v })} />
+            <Toggle id="hooks" label="Starter hooks" hint="useDebounce, useMediaQuery, useLocalStorage, ..." checked={opts.hooks} onChange={(v) => setOpts({ ...opts, hooks: v })} />
+            <Toggle id="decimal" label="decimal.js helpers" hint="add/sub/mul/div, currency, precision-safe math" checked={opts.decimal} onChange={(v) => setOpts({ ...opts, decimal: v })} />
+            <Toggle id="dateFns" label="date-fns" hint="Date utilities" checked={opts.dateFns} onChange={(v) => setOpts({ ...opts, dateFns: v })} />
             {opts.framework === "next" && (
               <Toggle id="nextIntl" label="next-intl" hint="i18n for Next.js" checked={opts.nextIntl} onChange={(v) => setOpts({ ...opts, nextIntl: v })} />
             )}
