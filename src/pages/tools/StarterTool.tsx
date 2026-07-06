@@ -1105,6 +1105,10 @@ const StarterTool = () => {
             <Toggle id="rhf" label="React Hook Form" hint="Forms + resolvers" checked={opts.rhf} onChange={(v) => setOpts({ ...opts, rhf: v })} />
             <Toggle id="lucide" label="lucide-react" hint="Icon library" checked={opts.lucide} onChange={(v) => setOpts({ ...opts, lucide: v })} />
             <Toggle id="svgr" label="SVGR" hint="Import .svg as React components" checked={opts.svgr} onChange={(v) => setOpts({ ...opts, svgr: v })} />
+            <Toggle id="utils" label="Base utils" hint="cn(), fetcher, format, env, constants, types" checked={opts.utils} onChange={(v) => setOpts({ ...opts, utils: v })} />
+            <Toggle id="hooks" label="Starter hooks" hint="useDebounce, useMediaQuery, useLocalStorage, ..." checked={opts.hooks} onChange={(v) => setOpts({ ...opts, hooks: v })} />
+            <Toggle id="decimal" label="decimal.js helpers" hint="add/sub/mul/div, currency, precision-safe math" checked={opts.decimal} onChange={(v) => setOpts({ ...opts, decimal: v })} />
+            <Toggle id="dateFns" label="date-fns" hint="Date utilities" checked={opts.dateFns} onChange={(v) => setOpts({ ...opts, dateFns: v })} />
             {opts.framework === "next" && (
               <Toggle id="nextIntl" label="next-intl" hint="i18n for Next.js" checked={opts.nextIntl} onChange={(v) => setOpts({ ...opts, nextIntl: v })} />
             )}
