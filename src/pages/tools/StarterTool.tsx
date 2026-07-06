@@ -148,6 +148,32 @@ ${o.tanstack ? "- TanStack React Query\n" : ""}${o.tailwind ? "- Tailwind CSS\n"
 pnpm install
 pnpm dev
 \`\`\`
+
+## Folder structure
+\`\`\`
+src/
+  app/ or pages/           # framework routes
+  components/
+    forms/                 # form components (RHF + Zod)
+    icons/                 # lucide icon barrel
+  hooks/                   # reusable client hooks (barrel: @/hooks)
+  lib/
+    utils/                 # cn, format, slugify   -> @/lib/utils
+    http/                  # apiFetch, HttpError   -> @/lib/http
+    config/                # env, constants        -> @/lib/config
+    math/                  # decimal.js helpers    -> @/lib/math
+    index.ts               # single barrel: @/lib
+  providers/               # AppProviders composition
+  styles/                  # globals.css
+  types/                   # global TS types + svg.d.ts
+\`\`\`
+
+Import from barrels for a clean surface:
+\`\`\`ts
+import { cn, apiFetch, env, add, toCurrency } from '@/lib';
+import { useDebounce, useMediaQuery } from '@/hooks';
+import { Icons } from '@/components/icons';
+\`\`\`
 `,
   });
 
