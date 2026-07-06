@@ -583,10 +583,10 @@ NEXT_PUBLIC_API_URL=http://localhost:3000
     });
   }
 
-  // cn() utility + fetcher + format + typed env
+  // Base utils — grouped by concern under src/lib/{utils,http,config}
   if (o.utils) {
     files.push({
-      path: "src/lib/cn.ts",
+      path: "src/lib/utils/cn.ts",
       language: "ts",
       content: `import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -599,7 +599,7 @@ export function cn(...inputs: ClassValue[]): string {
     });
 
     files.push({
-      path: "src/lib/format.ts",
+      path: "src/lib/utils/format.ts",
       language: "ts",
       content: `/** Formatting helpers for numbers, currency, and dates. */
 export const formatNumber = (n: number, locale = 'en-US', opts?: Intl.NumberFormatOptions) =>
@@ -635,7 +635,13 @@ export const slugify = (s: string) =>
     });
 
     files.push({
-      path: "src/lib/fetcher.ts",
+      path: "src/lib/utils/index.ts",
+      language: "ts",
+      content: `export * from './cn';\nexport * from './format';\n`,
+    });
+
+    files.push({
+      path: "src/lib/http/fetcher.ts",
       language: "ts",
       content: `/** Typed fetch wrapper that throws on non-2xx and parses JSON. */
 export class HttpError extends Error {
@@ -680,9 +686,15 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
 `,
     });
 
+    files.push({
+      path: "src/lib/http/index.ts",
+      language: "ts",
+      content: `export * from './fetcher';\n`,
+    });
+
     if (o.zod) {
       files.push({
-        path: "src/lib/env.ts",
+        path: "src/lib/config/env.ts",
         language: "ts",
         content: `import { z } from 'zod';
 
@@ -708,7 +720,7 @@ export const env = parsed.data;
     }
 
     files.push({
-      path: "src/lib/constants.ts",
+      path: "src/lib/config/constants.ts",
       language: "ts",
       content: `export const APP_NAME = '${o.appName || "my-app"}';
 export const SITE_URL = 'https://example.com';
@@ -721,6 +733,12 @@ export const ROUTES = {
 
 export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES];
 `,
+    });
+
+    files.push({
+      path: "src/lib/config/index.ts",
+      language: "ts",
+      content: `export * from './constants';\n${o.zod ? "export * from './env';\n" : ""}`,
     });
 
     files.push({
@@ -748,7 +766,7 @@ export interface ApiResponse<T> {
   // decimal.js money/calc helpers
   if (o.decimal) {
     files.push({
-      path: "src/lib/decimal.ts",
+      path: "src/lib/math/decimal.ts",
       language: "ts",
       content: `import Decimal from 'decimal.js';
 
@@ -798,7 +816,30 @@ export const clamp = (v: Numeric, min: Numeric, max: Numeric): Decimal =>
 export { Decimal };
 `,
     });
+
+    files.push({
+      path: "src/lib/math/index.ts",
+      language: "ts",
+      content: `export * from './decimal';\n`,
+    });
   }
+
+  // Top-level lib barrel — single import site: `import { cn, apiFetch, env } from '@/lib'`
+  if (o.utils || o.decimal) {
+    const parts: string[] = [];
+    if (o.utils) {
+      parts.push("export * from './utils';");
+      parts.push("export * from './http';");
+      parts.push("export * from './config';");
+    }
+    if (o.decimal) parts.push("export * from './math';");
+    files.push({
+      path: "src/lib/index.ts",
+      language: "ts",
+      content: parts.join("\n") + "\n",
+    });
+  }
+
 
   // Reusable hooks — framework-aware
   if (o.hooks) {
