@@ -291,7 +291,7 @@ export default defineConfig({
 export default {
   content: [
     './src/**/*.{ts,tsx,mdx}',
-    ${o.framework === "next" ? "'./app/**/*.{ts,tsx,mdx}'," : ""}
+    ${o.framework === "next" ? "'./app/**/*.{ts,tsx,mdx}',\n    './src/app/**/*.{ts,tsx,mdx}'," : ""}
   ],
   theme: {
     extend: {
