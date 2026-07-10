@@ -1084,6 +1084,63 @@ const StarterTool = () => {
 
   const activeFile = files.find((f) => f.path === active) ?? files[0];
 
+  const { tree, scaffoldSh, scaffoldPs } = useMemo(() => {
+    const paths = files.map((f) => f.path).sort();
+
+    interface Node { name: string; children: Map<string, Node>; isFile: boolean }
+    const root: Node = { name: "", children: new Map(), isFile: false };
+    for (const p of paths) {
+      const parts = p.split("/");
+      let cur = root;
+      parts.forEach((part, i) => {
+        if (!cur.children.has(part)) {
+          cur.children.set(part, { name: part, children: new Map(), isFile: i === parts.length - 1 });
+        }
+        cur = cur.children.get(part)!;
+      });
+    }
+    const lines: string[] = [`${opts.appName || "my-app"}/`];
+    const render = (node: Node, prefix: string) => {
+      const entries = [...node.children.values()].sort((a, b) => {
+        if (a.isFile !== b.isFile) return a.isFile ? 1 : -1;
+        return a.name.localeCompare(b.name);
+      });
+      entries.forEach((child, i) => {
+        const last = i === entries.length - 1;
+        const branch = last ? "└── " : "├── ";
+        lines.push(prefix + branch + child.name + (child.isFile ? "" : "/"));
+        if (!child.isFile) render(child, prefix + (last ? "    " : "│   "));
+      });
+    };
+    render(root, "");
+    const tree = lines.join("\n");
+
+    const dirs = new Set<string>();
+    for (const p of paths) {
+      const parts = p.split("/");
+      parts.pop();
+      if (parts.length) dirs.add(parts.join("/"));
+    }
+    const sortedDirs = [...dirs].sort();
+    const scaffoldSh = [
+      `# Scaffold folders + empty files for ${opts.appName || "my-app"}`,
+      `# Run from your project root (bash / zsh)`,
+      `mkdir -p \\`,
+      sortedDirs.map((d) => `  ${d}`).join(" \\\n"),
+      ``,
+      `touch \\`,
+      paths.map((p) => `  ${p}`).join(" \\\n"),
+    ].join("\n");
+
+    const scaffoldPs = [
+      `# PowerShell: scaffold folders + empty files`,
+      ...sortedDirs.map((d) => `New-Item -ItemType Directory -Force -Path "${d}" | Out-Null`),
+      ...paths.map((p) => `New-Item -ItemType File -Force -Path "${p}" | Out-Null`),
+    ].join("\n");
+
+    return { tree, scaffoldSh, scaffoldPs };
+  }, [files, opts.appName]);
+
   const copy = async (text: string, key: string) => {
     await navigator.clipboard.writeText(text);
     setCopied(key);
@@ -1206,6 +1263,68 @@ const StarterTool = () => {
 
         {/* Files viewer */}
         <div className="flex flex-col gap-3 min-w-0">
+          {/* Folder structure + scaffold commands */}
+          <div className="border border-border">
+            <div className="flex items-center justify-between px-3 py-2 bg-muted/30 border-b border-border">
+              <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                Folder structure
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 gap-1.5 text-xs"
+                onClick={() => copy(tree, "folder-tree")}
+              >
+                {copied === "folder-tree" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                Copy tree
+              </Button>
+            </div>
+            <pre className="bg-muted/10 p-4 text-xs font-mono overflow-auto max-h-[280px] leading-relaxed">
+              <code>{tree}</code>
+            </pre>
+            <div className="grid grid-cols-1 md:grid-cols-2 border-t border-border">
+              <div className="border-b md:border-b-0 md:border-r border-border">
+                <div className="flex items-center justify-between px-3 py-2 bg-muted/30">
+                  <span className="text-xs font-mono text-muted-foreground">bash / zsh</span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 gap-1.5 text-xs"
+                    onClick={() => copy(scaffoldSh, "scaffold-sh")}
+                  >
+                    {copied === "scaffold-sh" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                    Copy
+                  </Button>
+                </div>
+                <pre className="bg-muted/10 p-3 text-xs font-mono overflow-auto max-h-[240px] leading-relaxed">
+                  <code>{scaffoldSh}</code>
+                </pre>
+              </div>
+              <div>
+                <div className="flex items-center justify-between px-3 py-2 bg-muted/30">
+                  <span className="text-xs font-mono text-muted-foreground">PowerShell</span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 gap-1.5 text-xs"
+                    onClick={() => copy(scaffoldPs, "scaffold-ps")}
+                  >
+                    {copied === "scaffold-ps" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                    Copy
+                  </Button>
+                </div>
+                <pre className="bg-muted/10 p-3 text-xs font-mono overflow-auto max-h-[240px] leading-relaxed">
+                  <code>{scaffoldPs}</code>
+                </pre>
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground px-3 py-2 border-t border-border leading-relaxed">
+              Paste the command in your project root to scaffold every folder + empty file. Then copy the
+              contents of each tab below into its matching path.
+            </p>
+          </div>
+
+
           <Tabs value={active} onValueChange={setActive} className="flex flex-col gap-3">
             <TabsList className="h-auto flex-wrap justify-start gap-1 bg-transparent p-0">
               {files.map((f) => (
