@@ -1263,6 +1263,68 @@ const StarterTool = () => {
 
         {/* Files viewer */}
         <div className="flex flex-col gap-3 min-w-0">
+          {/* Folder structure + scaffold commands */}
+          <div className="border border-border">
+            <div className="flex items-center justify-between px-3 py-2 bg-muted/30 border-b border-border">
+              <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                Folder structure
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 gap-1.5 text-xs"
+                onClick={() => copy(tree, "folder-tree")}
+              >
+                {copied === "folder-tree" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                Copy tree
+              </Button>
+            </div>
+            <pre className="bg-muted/10 p-4 text-xs font-mono overflow-auto max-h-[280px] leading-relaxed">
+              <code>{tree}</code>
+            </pre>
+            <div className="grid grid-cols-1 md:grid-cols-2 border-t border-border">
+              <div className="border-b md:border-b-0 md:border-r border-border">
+                <div className="flex items-center justify-between px-3 py-2 bg-muted/30">
+                  <span className="text-xs font-mono text-muted-foreground">bash / zsh</span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 gap-1.5 text-xs"
+                    onClick={() => copy(scaffoldSh, "scaffold-sh")}
+                  >
+                    {copied === "scaffold-sh" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                    Copy
+                  </Button>
+                </div>
+                <pre className="bg-muted/10 p-3 text-xs font-mono overflow-auto max-h-[240px] leading-relaxed">
+                  <code>{scaffoldSh}</code>
+                </pre>
+              </div>
+              <div>
+                <div className="flex items-center justify-between px-3 py-2 bg-muted/30">
+                  <span className="text-xs font-mono text-muted-foreground">PowerShell</span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 gap-1.5 text-xs"
+                    onClick={() => copy(scaffoldPs, "scaffold-ps")}
+                  >
+                    {copied === "scaffold-ps" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                    Copy
+                  </Button>
+                </div>
+                <pre className="bg-muted/10 p-3 text-xs font-mono overflow-auto max-h-[240px] leading-relaxed">
+                  <code>{scaffoldPs}</code>
+                </pre>
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground px-3 py-2 border-t border-border leading-relaxed">
+              Paste the command in your project root to scaffold every folder + empty file. Then copy the
+              contents of each tab below into its matching path.
+            </p>
+          </div>
+
+
           <Tabs value={active} onValueChange={setActive} className="flex flex-col gap-3">
             <TabsList className="h-auto flex-wrap justify-start gap-1 bg-transparent p-0">
               {files.map((f) => (
