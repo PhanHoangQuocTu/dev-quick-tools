@@ -28,6 +28,7 @@ interface StackOptions {
   hooks: boolean;
   utils: boolean;
   dateFns: boolean;
+  docker: boolean;
 }
 
 interface FileOut {
@@ -1056,8 +1057,223 @@ export * from './use-isomorphic-layout-effect';
     });
   }
 
+  if (o.docker) {
+    const isNext = o.framework === "next";
+    const nodeVersion = "20-alpine";
+
+    files.push({
+      path: "Dockerfile",
+      language: "dockerfile",
+      content: isNext
+        ? `# syntax=docker/dockerfile:1.7
+# ---- deps ----
+FROM node:${nodeVersion} AS deps
+WORKDIR /app
+RUN corepack enable
+COPY package.json pnpm-lock.yaml* package-lock.json* yarn.lock* ./
+RUN \\
+  if [ -f pnpm-lock.yaml ]; then pnpm i --frozen-lockfile; \\
+  elif [ -f yarn.lock ]; then yarn --frozen-lockfile; \\
+  else npm ci; fi
+
+# ---- builder ----
+FROM node:${nodeVersion} AS builder
+WORKDIR /app
+RUN corepack enable
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN \\
+  if [ -f pnpm-lock.yaml ]; then pnpm build; \\
+  elif [ -f yarn.lock ]; then yarn build; \\
+  else npm run build; fi
+
+# ---- runner ----
+FROM node:${nodeVersion} AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN addgroup --system --gid 1001 nodejs \\
+ && adduser --system --uid 1001 nextjs
+
+# Requires \`output: 'standalone'\` in next.config.ts
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+EXPOSE 3000
+ENV PORT=3000 HOSTNAME=0.0.0.0
+CMD ["node", "server.js"]
+`
+        : `# syntax=docker/dockerfile:1.7
+# ---- deps ----
+FROM node:${nodeVersion} AS deps
+WORKDIR /app
+RUN corepack enable
+COPY package.json pnpm-lock.yaml* package-lock.json* yarn.lock* ./
+RUN \\
+  if [ -f pnpm-lock.yaml ]; then pnpm i --frozen-lockfile; \\
+  elif [ -f yarn.lock ]; then yarn --frozen-lockfile; \\
+  else npm ci; fi
+
+# ---- builder ----
+FROM node:${nodeVersion} AS builder
+WORKDIR /app
+RUN corepack enable
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN \\
+  if [ -f pnpm-lock.yaml ]; then pnpm build; \\
+  elif [ -f yarn.lock ]; then yarn build; \\
+  else npm run build; fi
+
+# ---- runner (nginx serves static Vite build) ----
+FROM nginx:1.27-alpine AS runner
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+`,
+    });
+
+    files.push({
+      path: ".dockerignore",
+      language: "gitignore",
+      content: `node_modules
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+.pnpm-store
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+${isNext ? ".next\n" : "dist\n"}build
+coverage
+.vscode
+.idea
+README.md
+Dockerfile
+docker-compose*.yml
+.dockerignore
+`,
+    });
+
+    files.push({
+      path: "docker-compose.yml",
+      language: "yaml",
+      content: isNext
+        ? `services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${o.appName || "my-app"}:latest
+    container_name: ${o.appName || "my-app"}
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+`
+        : `services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${o.appName || "my-app"}:latest
+    container_name: ${o.appName || "my-app"}
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+`,
+    });
+
+    files.push({
+      path: "docker-compose.dev.yml",
+      language: "yaml",
+      content: `# Dev override: hot-reload with the source mounted.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: ${isNext ? "pnpm dev" : "pnpm dev --host 0.0.0.0"}
+    ports:
+      - "${isNext ? "3000:3000" : "5173:5173"}"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+`,
+    });
+
+    files.push({
+      path: "Dockerfile.dev",
+      language: "dockerfile",
+      content: `# Lightweight dev image for hot-reload via docker-compose.dev.yml
+FROM node:${nodeVersion}
+WORKDIR /app
+RUN corepack enable
+COPY package.json pnpm-lock.yaml* package-lock.json* yarn.lock* ./
+RUN \\
+  if [ -f pnpm-lock.yaml ]; then pnpm i; \\
+  elif [ -f yarn.lock ]; then yarn; \\
+  else npm i; fi
+COPY . .
+EXPOSE ${isNext ? "3000" : "5173"}
+CMD ["${isNext ? "pnpm" : "pnpm"}", "dev"${isNext ? "" : ', "--host", "0.0.0.0"'}]
+`,
+    });
+
+    if (!isNext) {
+      files.push({
+        path: "docker/nginx.conf",
+        language: "nginx",
+        content: `server {
+  listen       80;
+  server_name  _;
+  root   /usr/share/nginx/html;
+  index  index.html;
+
+  # SPA fallback
+  location / {
+    try_files $uri $uri/ /index.html;
+  }
+
+  # Long-cache hashed assets
+  location ~* \\.(?:js|css|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|ico|webp|avif)$ {
+    expires 30d;
+    access_log off;
+    add_header Cache-Control "public, max-age=2592000, immutable";
+  }
+
+  gzip on;
+  gzip_types text/plain text/css application/json application/javascript
+             text/xml application/xml application/xml+rss text/javascript
+             image/svg+xml;
+  gzip_min_length 1024;
+}
+`,
+      });
+    }
+  }
+
   return files;
 }
+
 
 const StarterTool = () => {
   const tool = getTool("starter")!;
@@ -1076,6 +1292,7 @@ const StarterTool = () => {
     hooks: true,
     utils: true,
     dateFns: false,
+    docker: true,
   });
   const [copied, setCopied] = useState<string | null>(null);
 
@@ -1245,6 +1462,7 @@ const StarterTool = () => {
             <Toggle id="hooks" label="Starter hooks" hint="useDebounce, useMediaQuery, useLocalStorage, ..." checked={opts.hooks} onChange={(v) => setOpts({ ...opts, hooks: v })} />
             <Toggle id="decimal" label="decimal.js helpers" hint="add/sub/mul/div, currency, precision-safe math" checked={opts.decimal} onChange={(v) => setOpts({ ...opts, decimal: v })} />
             <Toggle id="dateFns" label="date-fns" hint="Date utilities" checked={opts.dateFns} onChange={(v) => setOpts({ ...opts, dateFns: v })} />
+            <Toggle id="docker" label="Docker" hint="Dockerfile, .dockerignore, docker-compose (prod + dev)" checked={opts.docker} onChange={(v) => setOpts({ ...opts, docker: v })} />
             {opts.framework === "next" && (
               <Toggle id="nextIntl" label="next-intl" hint="i18n for Next.js" checked={opts.nextIntl} onChange={(v) => setOpts({ ...opts, nextIntl: v })} />
             )}
