@@ -28,6 +28,7 @@ interface StackOptions {
   hooks: boolean;
   utils: boolean;
   dateFns: boolean;
+  docker: boolean;
 }
 
 interface FileOut {
