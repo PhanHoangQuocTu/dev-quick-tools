@@ -1077,6 +1077,7 @@ const StarterTool = () => {
     hooks: true,
     utils: true,
     dateFns: false,
+    docker: true,
   });
   const [copied, setCopied] = useState<string | null>(null);
 
