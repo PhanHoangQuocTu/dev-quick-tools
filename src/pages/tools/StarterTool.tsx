@@ -1462,6 +1462,7 @@ const StarterTool = () => {
             <Toggle id="hooks" label="Starter hooks" hint="useDebounce, useMediaQuery, useLocalStorage, ..." checked={opts.hooks} onChange={(v) => setOpts({ ...opts, hooks: v })} />
             <Toggle id="decimal" label="decimal.js helpers" hint="add/sub/mul/div, currency, precision-safe math" checked={opts.decimal} onChange={(v) => setOpts({ ...opts, decimal: v })} />
             <Toggle id="dateFns" label="date-fns" hint="Date utilities" checked={opts.dateFns} onChange={(v) => setOpts({ ...opts, dateFns: v })} />
+            <Toggle id="docker" label="Docker" hint="Dockerfile, .dockerignore, docker-compose (prod + dev)" checked={opts.docker} onChange={(v) => setOpts({ ...opts, docker: v })} />
             {opts.framework === "next" && (
               <Toggle id="nextIntl" label="next-intl" hint="i18n for Next.js" checked={opts.nextIntl} onChange={(v) => setOpts({ ...opts, nextIntl: v })} />
             )}
