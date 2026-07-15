@@ -12,11 +12,22 @@ import { toast } from "@/hooks/use-toast";
 
 type Framework = "next" | "vite";
 type Linter = "biome" | "eslint";
+type PackageManager = "npm" | "yarn" | "pnpm" | "bun";
+
+const PM_META: Record<PackageManager, { install: string; ci: string; run: (s: string) => string; exec: string; lockfile: string; version: string }> = {
+  npm:  { install: "npm install",  ci: "npm ci",                 run: (s) => `npm run ${s}`, exec: "npx",     lockfile: "package-lock.json", version: "10.9.0" },
+  yarn: { install: "yarn",          ci: "yarn --frozen-lockfile", run: (s) => `yarn ${s}`,    exec: "yarn dlx", lockfile: "yarn.lock",         version: "1.22.22" },
+  pnpm: { install: "pnpm install",  ci: "pnpm i --frozen-lockfile", run: (s) => `pnpm ${s}`,  exec: "pnpm dlx", lockfile: "pnpm-lock.yaml",    version: "9.12.0" },
+  bun:  { install: "bun install",   ci: "bun install --frozen-lockfile", run: (s) => `bun run ${s}`, exec: "bunx", lockfile: "bun.lockb",       version: "1.1.34" },
+};
+
 
 interface StackOptions {
   framework: Framework;
   linter: Linter;
+  pm: PackageManager;
   appName: string;
+
   tanstack: boolean;
   tailwind: boolean;
   zod: boolean;
@@ -115,7 +126,8 @@ function buildFiles(o: StackOptions): FileOut[] {
     scripts["lint"] = "eslint .";
   }
 
-  const pkg = {
+  const pm = PM_META[o.pm];
+  const pkg: Record<string, unknown> = {
     name: o.appName || "my-app",
     version: "0.1.0",
     private: true,
@@ -124,6 +136,10 @@ function buildFiles(o: StackOptions): FileOut[] {
     dependencies: Object.fromEntries(Object.entries(deps).sort()),
     devDependencies: Object.fromEntries(Object.entries(devDeps).sort()),
   };
+  // packageManager field is honored by corepack for pnpm/yarn/bun.
+  if (o.pm !== "npm") pkg.packageManager = `${o.pm}@${pm.version}`;
+  if (o.pm === "bun") pkg.engines = { bun: ">=1.1.0" };
+
 
   files.push({
     path: "package.json",
@@ -146,8 +162,9 @@ ${o.tanstack ? "- TanStack React Query\n" : ""}${o.tailwind ? "- Tailwind CSS\n"
 
 ## Getting started
 \`\`\`bash
-pnpm install
-pnpm dev
+${pm.install}
+${pm.run("dev")}
+
 \`\`\`
 
 ## Folder structure
@@ -1061,6 +1078,13 @@ export * from './use-isomorphic-layout-effect';
   if (o.docker) {
     const isNext = o.framework === "next";
     const nodeVersion = "20-alpine";
+    const baseImage = o.pm === "bun" ? "oven/bun:1-alpine" : `node:${nodeVersion}`;
+    const enablePm = o.pm === "pnpm" || o.pm === "yarn" ? "RUN corepack enable\n" : "";
+    const copyLock = `COPY package.json ${pm.lockfile}* ./`;
+    const runInstall = `RUN ${pm.ci}`;
+    const runBuild = `RUN ${pm.run("build")}`;
+    const runDev = pm.run("dev");
+
 
     files.push({
       path: "Dockerfile",
@@ -1068,29 +1092,21 @@ export * from './use-isomorphic-layout-effect';
       content: isNext
         ? `# syntax=docker/dockerfile:1.7
 # ---- deps ----
-FROM node:${nodeVersion} AS deps
+FROM ${baseImage} AS deps
 WORKDIR /app
-RUN corepack enable
-COPY package.json pnpm-lock.yaml* package-lock.json* yarn.lock* ./
-RUN \\
-  if [ -f pnpm-lock.yaml ]; then pnpm i --frozen-lockfile; \\
-  elif [ -f yarn.lock ]; then yarn --frozen-lockfile; \\
-  else npm ci; fi
+${enablePm}${copyLock}
+${runInstall}
 
 # ---- builder ----
-FROM node:${nodeVersion} AS builder
+FROM ${baseImage} AS builder
 WORKDIR /app
-RUN corepack enable
-COPY --from=deps /app/node_modules ./node_modules
+${enablePm}COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN \\
-  if [ -f pnpm-lock.yaml ]; then pnpm build; \\
-  elif [ -f yarn.lock ]; then yarn build; \\
-  else npm run build; fi
+${runBuild}
 
 # ---- runner ----
-FROM node:${nodeVersion} AS runner
+FROM ${baseImage} AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -1105,29 +1121,21 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000 HOSTNAME=0.0.0.0
-CMD ["node", "server.js"]
+CMD ["${o.pm === "bun" ? "bun" : "node"}", "server.js"]
 `
         : `# syntax=docker/dockerfile:1.7
 # ---- deps ----
-FROM node:${nodeVersion} AS deps
+FROM ${baseImage} AS deps
 WORKDIR /app
-RUN corepack enable
-COPY package.json pnpm-lock.yaml* package-lock.json* yarn.lock* ./
-RUN \\
-  if [ -f pnpm-lock.yaml ]; then pnpm i --frozen-lockfile; \\
-  elif [ -f yarn.lock ]; then yarn --frozen-lockfile; \\
-  else npm ci; fi
+${enablePm}${copyLock}
+${runInstall}
 
 # ---- builder ----
-FROM node:${nodeVersion} AS builder
+FROM ${baseImage} AS builder
 WORKDIR /app
-RUN corepack enable
-COPY --from=deps /app/node_modules ./node_modules
+${enablePm}COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN \\
-  if [ -f pnpm-lock.yaml ]; then pnpm build; \\
-  elif [ -f yarn.lock ]; then yarn build; \\
-  else npm run build; fi
+${runBuild}
 
 # ---- runner (nginx serves static Vite build) ----
 FROM nginx:1.27-alpine AS runner
@@ -1137,6 +1145,7 @@ EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 `,
     });
+
 
     files.push({
       path: ".dockerignore",
@@ -1209,7 +1218,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: ${isNext ? "pnpm dev" : "pnpm dev --host 0.0.0.0"}
+    command: ${isNext ? runDev : `${runDev} --host 0.0.0.0`}
     ports:
       - "${isNext ? "3000:3000" : "5173:5173"}"
     volumes:
@@ -1225,17 +1234,14 @@ services:
       path: "Dockerfile.dev",
       language: "dockerfile",
       content: `# Lightweight dev image for hot-reload via docker-compose.dev.yml
-FROM node:${nodeVersion}
+FROM ${baseImage}
 WORKDIR /app
-RUN corepack enable
-COPY package.json pnpm-lock.yaml* package-lock.json* yarn.lock* ./
-RUN \\
-  if [ -f pnpm-lock.yaml ]; then pnpm i; \\
-  elif [ -f yarn.lock ]; then yarn; \\
-  else npm i; fi
+${enablePm}${copyLock}
+RUN ${pm.install}
 COPY . .
 EXPOSE ${isNext ? "3000" : "5173"}
-CMD ["${isNext ? "pnpm" : "pnpm"}", "dev"${isNext ? "" : ', "--host", "0.0.0.0"'}]
+CMD [${isNext ? JSON.stringify(pm.run("dev").split(" ")).slice(1, -1) : `${JSON.stringify(pm.run("dev").split(" ")).slice(1, -1)}, "--host", "0.0.0.0"`}]
+
 `,
     });
 
@@ -1281,7 +1287,9 @@ const StarterTool = () => {
   const [opts, setOpts] = useState<StackOptions>({
     framework: "next",
     linter: "biome",
+    pm: "pnpm",
     appName: "my-app",
+
     tanstack: true,
     tailwind: true,
     zod: true,
@@ -1467,6 +1475,23 @@ const StarterTool = () => {
           </div>
 
           <div className="flex flex-col gap-2">
+            <span className="text-xs uppercase tracking-widest text-muted-foreground">Package manager</span>
+            <RadioGroup
+              value={opts.pm}
+              onValueChange={(v) => setOpts({ ...opts, pm: v as PackageManager })}
+              className="grid grid-cols-2 gap-2"
+            >
+              {(["npm", "yarn", "pnpm", "bun"] as PackageManager[]).map((p) => (
+                <label key={p} htmlFor={`pm-${p}`} className="flex items-center gap-2 border border-border p-2 cursor-pointer hover:border-primary/50">
+                  <RadioGroupItem value={p} id={`pm-${p}`} />
+                  <span className="text-sm capitalize">{p}</span>
+                </label>
+              ))}
+            </RadioGroup>
+          </div>
+
+
+          <div className="flex flex-col gap-2">
             <span className="text-xs uppercase tracking-widest text-muted-foreground">Libraries</span>
             <Toggle id="tanstack" label="TanStack React Query" hint="Data fetching + cache" checked={opts.tanstack} onChange={(v) => setOpts({ ...opts, tanstack: v })} />
             <Toggle id="tailwind" label="Tailwind CSS" hint="Utility-first styling" checked={opts.tailwind} onChange={(v) => setOpts({ ...opts, tailwind: v })} />
@@ -1491,8 +1516,10 @@ const StarterTool = () => {
 
           <p className="text-[11px] text-muted-foreground leading-relaxed">
             Files below are ready to copy into a fresh project. After copying, run{" "}
-            <code className="text-primary">pnpm install</code>.
+            <code className="text-primary">{PM_META[opts.pm].install}</code>.
           </p>
+
+
         </div>
 
         {/* Files viewer */}
