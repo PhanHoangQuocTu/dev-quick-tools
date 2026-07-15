@@ -239,6 +239,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
+  ${o.docker ? "output: 'standalone'," : ""}
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**' },
@@ -1301,7 +1302,7 @@ const StarterTool = () => {
 
   const activeFile = files.find((f) => f.path === active) ?? files[0];
 
-  const { tree, scaffoldSh, scaffoldPs } = useMemo(() => {
+  const { tree, scaffoldSh, scaffoldPs, dockerGuide } = useMemo(() => {
     const paths = files.map((f) => f.path).sort();
 
     interface Node { name: string; children: Map<string, Node>; isFile: boolean }
@@ -1355,8 +1356,23 @@ const StarterTool = () => {
       ...paths.map((p) => `New-Item -ItemType File -Force -Path "${p}" | Out-Null`),
     ].join("\n");
 
-    return { tree, scaffoldSh, scaffoldPs };
-  }, [files, opts.appName]);
+    const app = opts.appName || "my-app";
+    const dockerGuide = opts.docker
+      ? opts.framework === "next"
+        ? {
+            prod: `# Build production image\ndocker build -t ${app}:latest .\n\n# Run container\ndocker run -p 3000:3000 --env-file .env ${app}:latest\n\n# Or use Docker Compose\ndocker compose up -d`,
+            dev: `# Dev with hot-reload\ndocker compose -f docker-compose.yml -f docker-compose.dev.yml up`,
+            note: "The production Dockerfile expects Next.js output: 'standalone' (already set in next.config.ts when Docker is enabled).",
+          }
+        : {
+            prod: `# Build production image\ndocker build -t ${app}:latest .\n\n# Run container\ndocker run -p 8080:80 ${app}:latest\n\n# Or use Docker Compose\ndocker compose up -d`,
+            dev: `# Dev with hot-reload\ndocker compose -f docker-compose.yml -f docker-compose.dev.yml up`,
+            note: "The production image serves the Vite dist/ folder with nginx on port 80; host port 8080 is mapped.",
+          }
+      : null;
+
+    return { tree, scaffoldSh, scaffoldPs, dockerGuide };
+  }, [files, opts.appName, opts.docker, opts.framework]);
 
   const copy = async (text: string, key: string) => {
     await navigator.clipboard.writeText(text);
@@ -1542,6 +1558,57 @@ const StarterTool = () => {
             </p>
           </div>
 
+          {dockerGuide && (
+            <div className="border border-border">
+              <div className="flex items-center justify-between px-3 py-2 bg-muted/30 border-b border-border">
+                <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                  Docker guide
+                </span>
+                <span className="text-[11px] text-muted-foreground">
+                  {opts.framework === "next" ? "Next.js" : "Vite"}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 border-b border-border">
+                <div className="border-b md:border-b-0 md:border-r border-border">
+                  <div className="flex items-center justify-between px-3 py-2 bg-muted/30">
+                    <span className="text-xs font-mono text-muted-foreground">Production</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 gap-1.5 text-xs"
+                      onClick={() => copy(dockerGuide.prod, "docker-prod")}
+                    >
+                      {copied === "docker-prod" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                      Copy
+                    </Button>
+                  </div>
+                  <pre className="bg-muted/10 p-3 text-xs font-mono overflow-auto max-h-[240px] leading-relaxed">
+                    <code>{dockerGuide.prod}</code>
+                  </pre>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between px-3 py-2 bg-muted/30">
+                    <span className="text-xs font-mono text-muted-foreground">Development</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 gap-1.5 text-xs"
+                      onClick={() => copy(dockerGuide.dev, "docker-dev")}
+                    >
+                      {copied === "docker-dev" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                      Copy
+                    </Button>
+                  </div>
+                  <pre className="bg-muted/10 p-3 text-xs font-mono overflow-auto max-h-[240px] leading-relaxed">
+                    <code>{dockerGuide.dev}</code>
+                  </pre>
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground px-3 py-2 leading-relaxed">
+                {dockerGuide.note}
+              </p>
+            </div>
+          )}
 
           <Tabs value={active} onValueChange={setActive} className="flex flex-col gap-3">
             <TabsList className="h-auto flex-wrap justify-start gap-1 bg-transparent p-0">
