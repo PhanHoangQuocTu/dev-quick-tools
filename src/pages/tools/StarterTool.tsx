@@ -25,7 +25,9 @@ const PM_META: Record<PackageManager, { install: string; ci: string; run: (s: st
 interface StackOptions {
   framework: Framework;
   linter: Linter;
+  pm: PackageManager;
   appName: string;
+
   tanstack: boolean;
   tailwind: boolean;
   zod: boolean;
