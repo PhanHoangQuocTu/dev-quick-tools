@@ -1475,6 +1475,23 @@ const StarterTool = () => {
           </div>
 
           <div className="flex flex-col gap-2">
+            <span className="text-xs uppercase tracking-widest text-muted-foreground">Package manager</span>
+            <RadioGroup
+              value={opts.pm}
+              onValueChange={(v) => setOpts({ ...opts, pm: v as PackageManager })}
+              className="grid grid-cols-2 gap-2"
+            >
+              {(["npm", "yarn", "pnpm", "bun"] as PackageManager[]).map((p) => (
+                <label key={p} htmlFor={`pm-${p}`} className="flex items-center gap-2 border border-border p-2 cursor-pointer hover:border-primary/50">
+                  <RadioGroupItem value={p} id={`pm-${p}`} />
+                  <span className="text-sm capitalize">{p}</span>
+                </label>
+              ))}
+            </RadioGroup>
+          </div>
+
+
+          <div className="flex flex-col gap-2">
             <span className="text-xs uppercase tracking-widest text-muted-foreground">Libraries</span>
             <Toggle id="tanstack" label="TanStack React Query" hint="Data fetching + cache" checked={opts.tanstack} onChange={(v) => setOpts({ ...opts, tanstack: v })} />
             <Toggle id="tailwind" label="Tailwind CSS" hint="Utility-first styling" checked={opts.tailwind} onChange={(v) => setOpts({ ...opts, tailwind: v })} />
