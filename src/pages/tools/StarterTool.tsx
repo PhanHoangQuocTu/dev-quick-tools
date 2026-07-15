@@ -126,7 +126,8 @@ function buildFiles(o: StackOptions): FileOut[] {
     scripts["lint"] = "eslint .";
   }
 
-  const pkg = {
+  const pm = PM_META[o.pm];
+  const pkg: Record<string, unknown> = {
     name: o.appName || "my-app",
     version: "0.1.0",
     private: true,
@@ -135,6 +136,10 @@ function buildFiles(o: StackOptions): FileOut[] {
     dependencies: Object.fromEntries(Object.entries(deps).sort()),
     devDependencies: Object.fromEntries(Object.entries(devDeps).sort()),
   };
+  // packageManager field is honored by corepack for pnpm/yarn/bun.
+  if (o.pm !== "npm") pkg.packageManager = `${o.pm}@${pm.version}`;
+  if (o.pm === "bun") pkg.engines = { bun: ">=1.1.0" };
+
 
   files.push({
     path: "package.json",
