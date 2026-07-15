@@ -1558,6 +1558,57 @@ const StarterTool = () => {
             </p>
           </div>
 
+          {dockerGuide && (
+            <div className="border border-border">
+              <div className="flex items-center justify-between px-3 py-2 bg-muted/30 border-b border-border">
+                <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                  Docker guide
+                </span>
+                <span className="text-[11px] text-muted-foreground">
+                  {opts.framework === "next" ? "Next.js" : "Vite"}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 border-b border-border">
+                <div className="border-b md:border-b-0 md:border-r border-border">
+                  <div className="flex items-center justify-between px-3 py-2 bg-muted/30">
+                    <span className="text-xs font-mono text-muted-foreground">Production</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 gap-1.5 text-xs"
+                      onClick={() => copy(dockerGuide.prod, "docker-prod")}
+                    >
+                      {copied === "docker-prod" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                      Copy
+                    </Button>
+                  </div>
+                  <pre className="bg-muted/10 p-3 text-xs font-mono overflow-auto max-h-[240px] leading-relaxed">
+                    <code>{dockerGuide.prod}</code>
+                  </pre>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between px-3 py-2 bg-muted/30">
+                    <span className="text-xs font-mono text-muted-foreground">Development</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 gap-1.5 text-xs"
+                      onClick={() => copy(dockerGuide.dev, "docker-dev")}
+                    >
+                      {copied === "docker-dev" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                      Copy
+                    </Button>
+                  </div>
+                  <pre className="bg-muted/10 p-3 text-xs font-mono overflow-auto max-h-[240px] leading-relaxed">
+                    <code>{dockerGuide.dev}</code>
+                  </pre>
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground px-3 py-2 leading-relaxed">
+                {dockerGuide.note}
+              </p>
+            </div>
+          )}
 
           <Tabs value={active} onValueChange={setActive} className="flex flex-col gap-3">
             <TabsList className="h-auto flex-wrap justify-start gap-1 bg-transparent p-0">
