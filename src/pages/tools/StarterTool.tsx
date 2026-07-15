@@ -12,6 +12,15 @@ import { toast } from "@/hooks/use-toast";
 
 type Framework = "next" | "vite";
 type Linter = "biome" | "eslint";
+type PackageManager = "npm" | "yarn" | "pnpm" | "bun";
+
+const PM_META: Record<PackageManager, { install: string; ci: string; run: (s: string) => string; exec: string; lockfile: string; version: string }> = {
+  npm:  { install: "npm install",  ci: "npm ci",                 run: (s) => `npm run ${s}`, exec: "npx",     lockfile: "package-lock.json", version: "10.9.0" },
+  yarn: { install: "yarn",          ci: "yarn --frozen-lockfile", run: (s) => `yarn ${s}`,    exec: "yarn dlx", lockfile: "yarn.lock",         version: "1.22.22" },
+  pnpm: { install: "pnpm install",  ci: "pnpm i --frozen-lockfile", run: (s) => `pnpm ${s}`,  exec: "pnpm dlx", lockfile: "pnpm-lock.yaml",    version: "9.12.0" },
+  bun:  { install: "bun install",   ci: "bun install --frozen-lockfile", run: (s) => `bun run ${s}`, exec: "bunx", lockfile: "bun.lockb",       version: "1.1.34" },
+};
+
 
 interface StackOptions {
   framework: Framework;
