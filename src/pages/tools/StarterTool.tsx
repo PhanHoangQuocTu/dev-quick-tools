@@ -1356,8 +1356,23 @@ const StarterTool = () => {
       ...paths.map((p) => `New-Item -ItemType File -Force -Path "${p}" | Out-Null`),
     ].join("\n");
 
-    return { tree, scaffoldSh, scaffoldPs };
-  }, [files, opts.appName]);
+    const app = opts.appName || "my-app";
+    const dockerGuide = opts.docker
+      ? opts.framework === "next"
+        ? {
+            prod: `# Build production image\ndocker build -t ${app}:latest .\n\n# Run container\ndocker run -p 3000:3000 --env-file .env ${app}:latest\n\n# Or use Docker Compose\ndocker compose up -d`,
+            dev: `# Dev with hot-reload\ndocker compose -f docker-compose.yml -f docker-compose.dev.yml up`,
+            note: "The production Dockerfile expects Next.js output: 'standalone' (already set in next.config.ts when Docker is enabled).",
+          }
+        : {
+            prod: `# Build production image\ndocker build -t ${app}:latest .\n\n# Run container\ndocker run -p 8080:80 ${app}:latest\n\n# Or use Docker Compose\ndocker compose up -d`,
+            dev: `# Dev with hot-reload\ndocker compose -f docker-compose.yml -f docker-compose.dev.yml up`,
+            note: "The production image serves the Vite dist/ folder with nginx on port 80; host port 8080 is mapped.",
+          }
+      : null;
+
+    return { tree, scaffoldSh, scaffoldPs, dockerGuide };
+  }, [files, opts.appName, opts.docker, opts.framework]);
 
   const copy = async (text: string, key: string) => {
     await navigator.clipboard.writeText(text);
