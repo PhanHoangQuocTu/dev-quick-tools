@@ -1234,17 +1234,14 @@ services:
       path: "Dockerfile.dev",
       language: "dockerfile",
       content: `# Lightweight dev image for hot-reload via docker-compose.dev.yml
-FROM node:${nodeVersion}
+FROM ${baseImage}
 WORKDIR /app
-RUN corepack enable
-COPY package.json pnpm-lock.yaml* package-lock.json* yarn.lock* ./
-RUN \\
-  if [ -f pnpm-lock.yaml ]; then pnpm i; \\
-  elif [ -f yarn.lock ]; then yarn; \\
-  else npm i; fi
+${enablePm}${copyLock}
+RUN ${pm.install}
 COPY . .
 EXPOSE ${isNext ? "3000" : "5173"}
-CMD ["${isNext ? "pnpm" : "pnpm"}", "dev"${isNext ? "" : ', "--host", "0.0.0.0"'}]
+CMD [${isNext ? JSON.stringify(pm.run("dev").split(" ")).slice(1, -1) : `${JSON.stringify(pm.run("dev").split(" ")).slice(1, -1)}, "--host", "0.0.0.0"`}]
+
 `,
     });
 
