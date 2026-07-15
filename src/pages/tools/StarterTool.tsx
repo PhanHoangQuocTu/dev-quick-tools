@@ -1516,7 +1516,9 @@ const StarterTool = () => {
 
           <p className="text-[11px] text-muted-foreground leading-relaxed">
             Files below are ready to copy into a fresh project. After copying, run{" "}
-            <code className="text-primary">pnpm install</code>.
+            <code className="text-primary">{PM_META[opts.pm].install}</code>.
+          </p>
+
           </p>
         </div>
 
