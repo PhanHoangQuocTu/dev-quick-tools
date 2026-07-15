@@ -239,6 +239,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
+  ${o.docker ? "output: 'standalone'," : ""}
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**' },
