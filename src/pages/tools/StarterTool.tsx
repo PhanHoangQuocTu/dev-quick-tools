@@ -162,8 +162,9 @@ ${o.tanstack ? "- TanStack React Query\n" : ""}${o.tailwind ? "- Tailwind CSS\n"
 
 ## Getting started
 \`\`\`bash
-pnpm install
-pnpm dev
+${pm.install}
+${pm.run("dev")}
+
 \`\`\`
 
 ## Folder structure
