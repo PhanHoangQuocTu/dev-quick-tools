@@ -1519,7 +1519,7 @@ const StarterTool = () => {
             <code className="text-primary">{PM_META[opts.pm].install}</code>.
           </p>
 
-          </p>
+
         </div>
 
         {/* Files viewer */}
