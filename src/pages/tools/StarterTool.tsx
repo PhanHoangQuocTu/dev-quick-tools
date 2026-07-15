@@ -1218,7 +1218,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: ${isNext ? "pnpm dev" : "pnpm dev --host 0.0.0.0"}
+    command: ${isNext ? runDev : `${runDev} --host 0.0.0.0`}
     ports:
       - "${isNext ? "3000:3000" : "5173:5173"}"
     volumes:
