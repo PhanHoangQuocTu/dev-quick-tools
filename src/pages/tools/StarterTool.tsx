@@ -1078,6 +1078,13 @@ export * from './use-isomorphic-layout-effect';
   if (o.docker) {
     const isNext = o.framework === "next";
     const nodeVersion = "20-alpine";
+    const baseImage = o.pm === "bun" ? "oven/bun:1-alpine" : `node:${nodeVersion}`;
+    const enablePm = o.pm === "pnpm" || o.pm === "yarn" ? "RUN corepack enable\n" : "";
+    const copyLock = `COPY package.json ${pm.lockfile}* ./`;
+    const runInstall = `RUN ${pm.ci}`;
+    const runBuild = `RUN ${pm.run("build")}`;
+    const runDev = pm.run("dev");
+
 
     files.push({
       path: "Dockerfile",
