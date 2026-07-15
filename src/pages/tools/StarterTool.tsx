@@ -1092,29 +1092,21 @@ export * from './use-isomorphic-layout-effect';
       content: isNext
         ? `# syntax=docker/dockerfile:1.7
 # ---- deps ----
-FROM node:${nodeVersion} AS deps
+FROM ${baseImage} AS deps
 WORKDIR /app
-RUN corepack enable
-COPY package.json pnpm-lock.yaml* package-lock.json* yarn.lock* ./
-RUN \\
-  if [ -f pnpm-lock.yaml ]; then pnpm i --frozen-lockfile; \\
-  elif [ -f yarn.lock ]; then yarn --frozen-lockfile; \\
-  else npm ci; fi
+${enablePm}${copyLock}
+${runInstall}
 
 # ---- builder ----
-FROM node:${nodeVersion} AS builder
+FROM ${baseImage} AS builder
 WORKDIR /app
-RUN corepack enable
-COPY --from=deps /app/node_modules ./node_modules
+${enablePm}COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN \\
-  if [ -f pnpm-lock.yaml ]; then pnpm build; \\
-  elif [ -f yarn.lock ]; then yarn build; \\
-  else npm run build; fi
+${runBuild}
 
 # ---- runner ----
-FROM node:${nodeVersion} AS runner
+FROM ${baseImage} AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -1129,29 +1121,21 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000 HOSTNAME=0.0.0.0
-CMD ["node", "server.js"]
+CMD ["${o.pm === "bun" ? "bun" : "node"}", "server.js"]
 `
         : `# syntax=docker/dockerfile:1.7
 # ---- deps ----
-FROM node:${nodeVersion} AS deps
+FROM ${baseImage} AS deps
 WORKDIR /app
-RUN corepack enable
-COPY package.json pnpm-lock.yaml* package-lock.json* yarn.lock* ./
-RUN \\
-  if [ -f pnpm-lock.yaml ]; then pnpm i --frozen-lockfile; \\
-  elif [ -f yarn.lock ]; then yarn --frozen-lockfile; \\
-  else npm ci; fi
+${enablePm}${copyLock}
+${runInstall}
 
 # ---- builder ----
-FROM node:${nodeVersion} AS builder
+FROM ${baseImage} AS builder
 WORKDIR /app
-RUN corepack enable
-COPY --from=deps /app/node_modules ./node_modules
+${enablePm}COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN \\
-  if [ -f pnpm-lock.yaml ]; then pnpm build; \\
-  elif [ -f yarn.lock ]; then yarn build; \\
-  else npm run build; fi
+${runBuild}
 
 # ---- runner (nginx serves static Vite build) ----
 FROM nginx:1.27-alpine AS runner
@@ -1161,6 +1145,7 @@ EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 `,
     });
+
 
     files.push({
       path: ".dockerignore",
