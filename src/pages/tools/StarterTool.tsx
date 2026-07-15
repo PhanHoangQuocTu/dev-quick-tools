@@ -1302,7 +1302,7 @@ const StarterTool = () => {
 
   const activeFile = files.find((f) => f.path === active) ?? files[0];
 
-  const { tree, scaffoldSh, scaffoldPs } = useMemo(() => {
+  const { tree, scaffoldSh, scaffoldPs, dockerGuide } = useMemo(() => {
     const paths = files.map((f) => f.path).sort();
 
     interface Node { name: string; children: Map<string, Node>; isFile: boolean }
