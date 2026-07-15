@@ -1287,7 +1287,9 @@ const StarterTool = () => {
   const [opts, setOpts] = useState<StackOptions>({
     framework: "next",
     linter: "biome",
+    pm: "pnpm",
     appName: "my-app",
+
     tanstack: true,
     tailwind: true,
     zod: true,
