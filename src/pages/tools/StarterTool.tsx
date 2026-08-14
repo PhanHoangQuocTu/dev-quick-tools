@@ -1226,12 +1226,16 @@ docker-compose*.yml
       language: "yaml",
       content: `# Dev override: hot-reload with the source mounted.
 # Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# Package manager: ${o.pm}${needsCorepack ? " (enabled via corepack inside the container)" : ""}
+# Install deps into the container volume:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm web ${needsCorepack ? `sh -c "corepack enable && ${pm.install}"` : pm.install}
 services:
   web:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: ${isNext ? runDev : `${runDev} --host 0.0.0.0`}
+    entrypoint: ${needsCorepack ? '["sh", "-c", "corepack enable && exec \\"$0\\" \\"$@\\""]' : "[]"}
+    command: ${devComposeCommand}
     ports:
       - "${isNext ? "3000:3000" : "5173:5173"}"
     volumes:
