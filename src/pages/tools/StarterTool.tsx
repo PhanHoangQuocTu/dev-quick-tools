@@ -1194,6 +1194,8 @@ docker-compose*.yml
     image: ${o.appName || "my-app"}:latest
     container_name: ${o.appName || "my-app"}
     restart: unless-stopped
+    # Standalone Next.js server, run with ${o.pm === "bun" ? "bun" : "node"} (package manager: ${o.pm})
+    command: ${prodComposeCommand}
     ports:
       - "3000:3000"
     environment:
