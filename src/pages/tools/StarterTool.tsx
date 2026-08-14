@@ -1230,7 +1230,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    entrypoint: ${needsCorepack ? '["sh", "-c", "corepack enable && exec \\"$0\\" \\"$@\\""]' : "[]"}
+    entrypoint: ${needsCorepack ? '["sh", "-c", "corepack enable && exec \\"$$0\\" \\"$$@\\""]' : "[]"}
     command: ${devComposeCommand}
     ports:
       - "${isNext ? "3000:3000" : "5173:5173"}"
