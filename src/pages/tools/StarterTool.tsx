@@ -1084,6 +1084,13 @@ export * from './use-isomorphic-layout-effect';
     const runInstall = `RUN ${pm.ci}`;
     const runBuild = `RUN ${pm.run("build")}`;
     const runDev = pm.run("dev");
+    const needsCorepack = o.pm === "pnpm" || o.pm === "yarn";
+    // Dev command, normalized per package manager (corepack for pnpm/yarn, bun for Bun).
+    const devCmdStr = isNext ? runDev : `${runDev} --host 0.0.0.0`;
+    const devComposeCommand = JSON.stringify(devCmdStr.split(" "));
+
+    const prodComposeCommand = JSON.stringify([o.pm === "bun" ? "bun" : "node", "server.js"]);
+
 
 
     files.push({
@@ -1183,6 +1190,8 @@ docker-compose*.yml
     image: ${o.appName || "my-app"}:latest
     container_name: ${o.appName || "my-app"}
     restart: unless-stopped
+    # Standalone Next.js server, run with ${o.pm === "bun" ? "bun" : "node"} (package manager: ${o.pm})
+    command: ${prodComposeCommand}
     ports:
       - "3000:3000"
     environment:
@@ -1213,12 +1222,16 @@ docker-compose*.yml
       language: "yaml",
       content: `# Dev override: hot-reload with the source mounted.
 # Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# Package manager: ${o.pm}${needsCorepack ? " (enabled via corepack inside the container)" : ""}
+# Install deps into the container volume:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm web ${needsCorepack ? `sh -c "corepack enable && ${pm.install}"` : pm.install}
 services:
   web:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: ${isNext ? runDev : `${runDev} --host 0.0.0.0`}
+    entrypoint: ${needsCorepack ? '["sh", "-c", "corepack enable && exec \\"$$0\\" \\"$$@\\""]' : "[]"}
+    command: ${devComposeCommand}
     ports:
       - "${isNext ? "3000:3000" : "5173:5173"}"
     volumes:
