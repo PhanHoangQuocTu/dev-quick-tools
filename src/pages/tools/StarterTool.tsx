@@ -1084,6 +1084,17 @@ export * from './use-isomorphic-layout-effect';
     const runInstall = `RUN ${pm.ci}`;
     const runBuild = `RUN ${pm.run("build")}`;
     const runDev = pm.run("dev");
+    const needsCorepack = o.pm === "pnpm" || o.pm === "yarn";
+    // Dev command, normalized per package manager (corepack for pnpm/yarn, bun for Bun).
+    const devCmdStr = isNext ? runDev : `${runDev} --host 0.0.0.0`;
+    const devComposeCommand = needsCorepack
+      ? `["sh", "-c", "corepack enable && ${devCmdStr}"]`
+      : JSON.stringify(devCmdStr.split(" "));
+    const devComposeInstall = needsCorepack
+      ? `["sh", "-c", "corepack enable && ${pm.install}"]`
+      : JSON.stringify(pm.install.split(" "));
+    const prodComposeCommand = JSON.stringify([o.pm === "bun" ? "bun" : "node", "server.js"]);
+
 
 
     files.push({
